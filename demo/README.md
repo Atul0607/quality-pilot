@@ -21,7 +21,7 @@ The app is not published on a host port by default. The browser and API tests co
 ## Features exercised
 
 - UI: valid and invalid login, product search, multi-item cart arithmetic, checkout postal-code validation, successful checkout, and order history.
-- API: authentication, account-registration validation, authentication enforcement, checkout validation, empty-cart rejection, server-calculated order creation, and account/cart isolation.
+- API: authentication, account-registration validation, authentication enforcement, checkout validation, empty-cart rejection, server-calculated order creation, concurrent checkout safety, and account/cart isolation.
 - Every browser test gets a new browser context. Fixtures create unique users through the registration API and delete them after the test, cascading their carts and orders.
 - Product IDs, names, and cent-based prices are fixed in `app.py`. Account identities are unique per test to avoid cross-test collisions.
 - Locators use accessible roles and labels with Playwright's auto-waiting assertions; there are no fixed sleeps.
@@ -32,7 +32,7 @@ The suite uses three registered markers:
 
 - `smoke`: login, search, and successful order creation/check-out journeys.
 - `regression`: invalid input, cart arithmetic, and feature validation.
-- `reliability`: isolation of carts between separate customer accounts.
+- `reliability`: isolation between customer carts and safe handling of concurrent checkout submissions.
 
 To select marker groups, change the `test_command` in `quality-pilot.toml`, for example:
 

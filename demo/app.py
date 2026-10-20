@@ -15,6 +15,7 @@ from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 import psycopg
 from psycopg.rows import dict_row
+from starlette.concurrency import run_in_threadpool
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/quality-pilot-storefront.sqlite3")
 SESSION_COOKIE = "quality_pilot_session"
@@ -232,6 +233,10 @@ def _cart_summary(user_id: int) -> tuple[list[dict[str, Any]], int]:
             "SELECT product_id, quantity FROM cart_items WHERE user_id = ? ORDER BY product_id",
             (user_id,),
         ).fetchall()
+    return _summarize_cart_rows(rows)
+
+
+def _summarize_cart_rows(rows: list[Any]) -> tuple[list[dict[str, Any]], int]:
     items = []
     total = 0
     for row in rows:
@@ -274,6 +279,27 @@ def _login(email: str, password: str) -> tuple[int | None, str | None]:
     ):
         return None, None
     return int(user["id"]), _new_session(int(user["id"]))
+
+
+def _user_details(user_id: int) -> Any:
+    with connection() as db:
+        return db.execute(
+            "SELECT id, email, name FROM users WHERE id = ?", (user_id,)
+        ).fetchone()
+
+
+def _add_cart_item(
+    user_id: int, product_id: str, quantity: int
+) -> tuple[list[dict[str, Any]], int]:
+    with connection() as db:
+        db.execute(
+            "INSERT INTO cart_items(user_id, product_id, quantity) VALUES (?, ?, ?) "
+            "ON CONFLICT(user_id, product_id) DO UPDATE SET quantity = "
+            "CASE WHEN cart_items.quantity + excluded.quantity > 99 "
+            "THEN 99 ELSE cart_items.quantity + excluded.quantity END",
+            (user_id, product_id, quantity),
+        )
+    return _cart_summary(user_id)
 
 
 def _is_integrity_error(error: Exception) -> bool:
@@ -332,10 +358,10 @@ async def api_register(request: Request) -> Response:
     if errors:
         return JSONResponse({"errors": errors}, status_code=422)
     try:
-        user_id = _create_user(email, name, password)
+        user_id = await run_in_threadpool(_create_user, email, name, password)
     except (sqlite3.IntegrityError, psycopg.IntegrityError):
         return JSONResponse({"errors": {"email": "An account with this email already exists."}}, status_code=409)
-    token = _new_session(user_id)
+    token = await run_in_threadpool(_new_session, user_id)
     response = JSONResponse({"id": user_id, "email": email.strip().lower(), "name": name.strip()}, status_code=201)
     _set_session(response, token)
     return response
@@ -353,11 +379,10 @@ async def api_login(request: Request) -> Response:
     password = payload.get("password", "")
     if not isinstance(email, str) or not isinstance(password, str) or not email.strip() or not password:
         return JSONResponse({"error": "Email and password are required."}, status_code=422)
-    user_id, token = _login(email, password)
+    user_id, token = await run_in_threadpool(_login, email, password)
     if user_id is None or token is None:
         return JSONResponse({"error": "Email or password is incorrect."}, status_code=401)
-    with connection() as db:
-        user = db.execute("SELECT id, email, name FROM users WHERE id = ?", (user_id,)).fetchone()
+    user = await run_in_threadpool(_user_details, user_id)
     response = JSONResponse({"id": user["id"], "email": user["email"], "name": user["name"]})
     _set_session(response, token)
     return response
@@ -374,7 +399,7 @@ def api_cart(request: Request) -> Response:
 
 @app.post("/api/cart/items")
 async def api_add_cart_item(request: Request) -> Response:
-    user = _require_user(request)
+    user = await run_in_threadpool(_require_user, request)
     if user is None:
         return JSONResponse({"error": "Authentication required."}, status_code=401)
     try:
@@ -389,21 +414,15 @@ async def api_add_cart_item(request: Request) -> Response:
         return JSONResponse({"errors": {"product_id": "Choose an available product."}}, status_code=422)
     if isinstance(quantity, bool) or not isinstance(quantity, int) or not 1 <= quantity <= 99:
         return JSONResponse({"errors": {"quantity": "Quantity must be between 1 and 99."}}, status_code=422)
-    with connection() as db:
-        db.execute(
-            "INSERT INTO cart_items(user_id, product_id, quantity) VALUES (?, ?, ?) "
-            "ON CONFLICT(user_id, product_id) DO UPDATE SET quantity = "
-            "CASE WHEN cart_items.quantity + excluded.quantity > 99 "
-            "THEN 99 ELSE cart_items.quantity + excluded.quantity END",
-            (int(user["id"]), product_id, quantity),
-        )
-    items, total = _cart_summary(int(user["id"]))
+    items, total = await run_in_threadpool(
+        _add_cart_item, int(user["id"]), product_id, quantity
+    )
     return JSONResponse({"items": items, "total_cents": total}, status_code=201)
 
 
 @app.post("/api/orders")
 async def api_create_order(request: Request) -> Response:
-    user = _require_user(request)
+    user = await run_in_threadpool(_require_user, request)
     if user is None:
         return JSONResponse({"error": "Authentication required."}, status_code=401)
     try:
@@ -415,34 +434,19 @@ async def api_create_order(request: Request) -> Response:
     errors = _validate_checkout(payload)
     if errors:
         return JSONResponse({"errors": errors}, status_code=422)
-    items, total = _cart_summary(int(user["id"]))
-    if not items:
-        return JSONResponse({"error": "Your cart is empty."}, status_code=409)
-    with connection() as db:
-        cursor = db.execute(
-            "INSERT INTO orders(user_id, customer_name, address, city, postal_code, total_cents) "
-            "VALUES (?, ?, ?, ?, ?, ?) RETURNING id",
-            (
-                int(user["id"]),
-                payload["name"].strip(),
-                payload["address"].strip(),
-                payload["city"].strip(),
-                payload["postal_code"].strip(),
-                total,
-            ),
+    try:
+        created = await run_in_threadpool(
+            _create_order, int(user["id"]), payload
         )
-        order_id = int(cursor.fetchone()["id"])
-        db.executemany(
-            "INSERT INTO order_items(order_id, product_id, product_name, unit_price_cents, quantity) "
-            "VALUES (?, ?, ?, ?, ?)",
-            [
-                (order_id, item["id"], item["name"], item["price_cents"], item["quantity"])
-                for item in items
-            ],
-        )
-        db.execute("DELETE FROM cart_items WHERE user_id = ?", (int(user["id"]),))
+    except ValueError as error:
+        return JSONResponse({"error": str(error)}, status_code=409)
     return JSONResponse(
-        {"id": order_id, "total_cents": total, "items": items, "status": "placed"},
+        {
+            "id": created["id"],
+            "total_cents": created["total_cents"],
+            "items": created["items"],
+            "status": "placed",
+        },
         status_code=201,
     )
 
@@ -687,15 +691,30 @@ def checkout_form(
             _layout("Checkout", f'<p role="alert" class="errors">{_escape(message)}</p>'),
             status_code=422,
         )
-    created = _create_order(int(user["id"]), payload)
+    try:
+        created = _create_order(int(user["id"]), payload)
+    except ValueError as error:
+        return HTMLResponse(
+            _layout("Checkout", f'<p role="alert" class="errors">{_escape(error)}</p>'),
+            status_code=409,
+        )
     return RedirectResponse(f"/orders/{created['id']}", status_code=303)
 
 
 def _create_order(user_id: int, payload: dict[str, object]) -> dict[str, Any]:
-    items, total = _cart_summary(user_id)
-    if not items:
-        raise ValueError("Your cart is empty.")
     with connection() as db:
+        if not db.postgres:
+            db.execute("BEGIN IMMEDIATE")
+        cart_query = (
+            "SELECT product_id, quantity FROM cart_items "
+            "WHERE user_id = ? ORDER BY product_id"
+        )
+        if db.postgres:
+            cart_query += " FOR UPDATE"
+        rows = db.execute(cart_query, (user_id,)).fetchall()
+        items, total = _summarize_cart_rows(rows)
+        if not items:
+            raise ValueError("Your cart is empty.")
         cursor = db.execute(
             "INSERT INTO orders(user_id, customer_name, address, city, postal_code, total_cents) "
             "VALUES (?, ?, ?, ?, ?, ?) RETURNING id",

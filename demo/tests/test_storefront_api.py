@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
+
 import pytest
 import requests
 
@@ -121,6 +124,59 @@ def test_api_creates_order_with_server_calculated_total(
         assert client.get(f"{BASE_URL}/api/orders", timeout=10).json()["orders"][0]["id"] == result["id"]
     finally:
         client.close()
+
+
+@pytest.mark.reliability
+def test_concurrent_order_requests_consume_cart_only_once(
+    account: dict[str, str],
+) -> None:
+    login_client = requests.Session()
+    clients = [requests.Session(), requests.Session()]
+    try:
+        login = login_client.post(
+            f"{BASE_URL}/api/auth/login",
+            json={"email": account["email"], "password": account["password"]},
+            timeout=10,
+        )
+        assert login.status_code == 200
+        cookies = login_client.cookies.get_dict()
+        for client in clients:
+            client.cookies.update(cookies)
+
+        added = login_client.post(
+            f"{BASE_URL}/api/cart/items",
+            json={"product_id": "trail-mug", "quantity": 2},
+            timeout=10,
+        )
+        assert added.status_code == 201
+
+        barrier = Barrier(2)
+        checkout = {
+            "name": account["name"],
+            "address": "14 River Road",
+            "city": "Portland",
+            "postal_code": "97201",
+        }
+
+        def submit_order(client: requests.Session) -> requests.Response:
+            barrier.wait(timeout=10)
+            return client.post(
+                f"{BASE_URL}/api/orders", json=checkout, timeout=10
+            )
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            responses = list(executor.map(submit_order, clients))
+
+        assert sorted(response.status_code for response in responses) == [201, 409]
+        placed = next(response for response in responses if response.status_code == 201)
+        order_id = placed.json()["id"]
+        assert login_client.get(f"{BASE_URL}/api/cart", timeout=10).json()["items"] == []
+        orders = login_client.get(f"{BASE_URL}/api/orders", timeout=10).json()["orders"]
+        assert [order["id"] for order in orders] == [order_id]
+    finally:
+        login_client.close()
+        for client in clients:
+            client.close()
 
 
 @pytest.mark.reliability
