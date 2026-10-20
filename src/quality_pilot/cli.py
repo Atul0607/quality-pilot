@@ -9,6 +9,7 @@ from pathlib import Path
 from quality_pilot import __version__
 from quality_pilot.compose import DockerCompose
 from quality_pilot.config import ConfigError, load_config
+from quality_pilot.dashboard import serve_dashboard
 from quality_pilot.run import execute_run, read_report
 
 
@@ -25,6 +26,12 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--config", type=Path, default=Path("quality-pilot.toml"))
     report = commands.add_parser("report", help="print a saved Markdown report")
     report.add_argument("run_dir", type=Path)
+    dashboard = commands.add_parser(
+        "dashboard", help="browse local run history and evidence in a read-only dashboard"
+    )
+    dashboard.add_argument("--artifacts-dir", type=Path, default=Path(".quality-pilot/runs"))
+    dashboard.add_argument("--host", default="127.0.0.1")
+    dashboard.add_argument("--port", type=int, default=8765)
     return parser
 
 
@@ -71,6 +78,15 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "check":
         return _check(args.config)
+    if args.command == "dashboard":
+        try:
+            serve_dashboard(args.artifacts_dir, args.host, args.port)
+        except OSError as exc:
+            print(f"Unable to start dashboard: {exc}", file=sys.stderr)
+            return 2
+        except KeyboardInterrupt:
+            print("\nDashboard stopped.")
+        return 0
 
     try:
         config = load_config(args.config)
