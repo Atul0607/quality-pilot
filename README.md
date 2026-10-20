@@ -50,9 +50,21 @@ The CLI currently classifies a whole-suite retry as flaky if a test case changes
 
 Unique Compose project names isolate ordinary containers, networks, and project-scoped volumes. External volumes and host bind mounts are intentionally not reset between attempts, so configure test-specific resources if those contain mutable state.
 
+## Browse local run history
+
+Start the read-only dashboard after running Quality Pilot:
+
+```sh
+quality-pilot dashboard
+```
+
+Open `http://127.0.0.1:8765`. The dashboard reads `schema_version = 1` `run.json` records from `.quality-pilot/runs/` and shows outcomes, durations, per-test failures/flaky classifications, attempts, warnings, and available evidence. Missing evidence is labeled unavailable; malformed, incomplete, or unsupported-version records are called out rather than presented as successful. Evidence files are served as downloads. The server binds to loopback by default; only change `--host` if you intentionally want to expose local run data to other machines. Stop it with Ctrl-C.
+
+Use `quality-pilot dashboard --artifacts-dir PATH --host 127.0.0.1 --port 8765` to select another run directory or port.
+
 ## Pull request CI
 
-The [GitHub Actions workflow](.github/workflows/quality.yml) runs Ruff linting, the Quality Pilot unit tests, Compose validation, image builds, and the Docker-backed browser smoke suite on pull requests. Test failures fail the job. HTML/JUnit reports and Playwright screenshots/traces are uploaded even on failure when generated. The workflow has been added to the repository; its hosted GitHub Actions run has not yet been executed here.
+The [GitHub Actions workflow](.github/workflows/quality.yml) runs Ruff linting, the Quality Pilot unit tests, Compose validation, image builds, and the Docker-backed browser smoke suite on pull requests. Test failures fail the job. HTML/JUnit reports and Playwright screenshots/traces are uploaded even on failure when generated. This workflow was verified on merged PR #1.
 
 See [docs/architecture.md](docs/architecture.md) for the architecture and implementation plan.
 
