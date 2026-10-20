@@ -1,0 +1,11 @@
+.git
+.quality-pilot
+.venv
+.pytest_cache
+.ruff_cache
+test-results
+__pycache__
+*.py[cod]
+*.egg-info
+build
+dist
