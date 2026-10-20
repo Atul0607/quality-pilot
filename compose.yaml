@@ -1,0 +1,76 @@
+services:
+  db:
+    image: postgres:17.6-alpine3.22@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
+    environment:
+      POSTGRES_DB: qualitypilot
+      POSTGRES_USER: qualitypilot
+      POSTGRES_PASSWORD: qualitypilot
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -h 127.0.0.1 -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"
+      interval: 2s
+      timeout: 3s
+      retries: 20
+      start_period: 3s
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: ./demo
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://qualitypilot:qualitypilot@db:5432/qualitypilot
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "from urllib.request import urlopen; response=urlopen('http://127.0.0.1:8000/api/health', timeout=2); assert response.status == 200"
+      interval: 2s
+      timeout: 3s
+      retries: 20
+      start_period: 3s
+
+  e2e:
+    build:
+      context: .
+      dockerfile: demo/Dockerfile.e2e
+    environment:
+      APP_BASE_URL: http://app:8000
+    command: ["pytest", "-q"]
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: "no"
+
+  smoke:
+    build:
+      context: .
+      dockerfile: demo/Dockerfile.e2e
+    environment:
+      APP_BASE_URL: http://app:8000
+    command:
+      - pytest
+      - -q
+      - -m
+      - smoke
+      - --junitxml=/quality-pilot-artifacts/junit.xml
+      - --html=/quality-pilot-artifacts/report.html
+      - --self-contained-html
+      - --screenshot=only-on-failure
+      - --tracing=retain-on-failure
+      - --output=/quality-pilot-artifacts/playwright
+    depends_on:
+      app:
+        condition: service_healthy
+    volumes:
+      - ./test-results:/quality-pilot-artifacts
+    restart: "no"
+
+volumes:
+  postgres-data:

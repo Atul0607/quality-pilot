@@ -1,0 +1,59 @@
+name: Quality checks
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, unit, and browser smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pinned lint tool
+        run: python -m pip install ruff==0.12.10
+
+      - name: Lint
+        run: ruff check src tests demo
+
+      - name: Run Quality Pilot unit tests
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -v
+
+      - name: Validate Compose configuration
+        run: docker compose config --quiet
+
+      - name: Build application and browser-test images
+        run: docker compose build app smoke
+
+      - name: Run Docker browser smoke suite
+        run: docker compose up --build --abort-on-container-exit --exit-code-from smoke smoke
+
+      - name: Upload browser reports, screenshots, and traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-pilot-browser-evidence
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Stop Compose services and remove test database
+        if: always()
+        run: docker compose down --volumes --remove-orphans

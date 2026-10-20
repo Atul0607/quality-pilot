@@ -1,0 +1,18 @@
+version = 1
+compose_file = "compose.yaml"
+app_services = ["app"]
+test_service = "e2e"
+test_command = [
+    "pytest",
+    "-q",
+    "--junitxml={artifacts}/junit.xml",
+    "--html={artifacts}/report.html",
+    "--self-contained-html",
+    "--screenshot=only-on-failure",
+    "--tracing=retain-on-failure",
+    "--output={artifacts}/playwright",
+]
+retries = 2
+timeout_seconds = 900
+artifacts_dir = ".quality-pilot/runs"
+junit_report = "junit.xml"

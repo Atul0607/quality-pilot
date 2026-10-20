@@ -1,0 +1,12 @@
+.quality-pilot/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+test-results/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/

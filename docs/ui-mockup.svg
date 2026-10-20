@@ -1,0 +1,262 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1000" viewBox="0 0 1440 1000" fill="none">
+  <defs>
+    <linearGradient id="brand" x1="29" y1="24" x2="53" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#83F2C2"/>
+      <stop offset="1" stop-color="#40B98E"/>
+    </linearGradient>
+    <linearGradient id="chart" x1="735" y1="450" x2="735" y2="590" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#47D9A2" stop-opacity=".24"/>
+      <stop offset="1" stop-color="#47D9A2" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="1440" height="1000" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="12" stdDeviation="20" flood-color="#080B12" flood-opacity=".22"/>
+    </filter>
+    <style>
+      text { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .muted { fill: #8993A6; }
+      .dim { fill: #657084; }
+      .label { fill: #AAB3C3; font-size: 12px; font-weight: 600; letter-spacing: .08em; }
+      .body { fill: #DDE3EC; font-size: 14px; }
+      .small { fill: #AAB3C3; font-size: 12px; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    </style>
+  </defs>
+
+  <rect width="1440" height="1000" fill="#0B0E14"/>
+  <rect x="0.5" y=".5" width="1439" height="999" rx="18" stroke="#202633"/>
+
+  <!-- Sidebar -->
+  <rect x="1" y="1" width="238" height="998" rx="17" fill="#0E121A"/>
+  <path d="M239 1V999" stroke="#202633"/>
+  <rect x="25" y="24" width="36" height="36" rx="11" fill="url(#brand)"/>
+  <path d="M34 42.2 40.3 48l11.5-13" stroke="#10231E" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="72" y="40" fill="#F1F4F8" font-size="16" font-weight="700">quality pilot</text>
+  <text x="72" y="55" fill="#738094" font-size="10" font-weight="600" letter-spacing=".12em">TEST RELIABILITY</text>
+
+  <text x="25" y="111" class="label">WORKSPACE</text>
+  <rect x="17" y="125" width="205" height="42" rx="9" fill="#171E29"/>
+  <rect x="29" y="137" width="18" height="18" rx="5" fill="#263544"/>
+  <path d="M34 142h8M34 146h8M34 150h5" stroke="#69DDB0" stroke-width="1.5" stroke-linecap="round"/>
+  <text x="57" y="151" fill="#E4EAF2" font-size="13" font-weight="600">acme / storefront</text>
+  <path d="m199 143 4 4-4 4" stroke="#7C8798" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="25" y="208" class="label">MONITOR</text>
+  <rect x="17" y="222" width="205" height="39" rx="8" fill="#16251F"/>
+  <rect x="17" y="232" width="3" height="19" rx="1.5" fill="#54D9A4"/>
+  <path d="M32 235h14M32 241h14M32 247h10" stroke="#6DE4B5" stroke-width="1.5" stroke-linecap="round"/>
+  <text x="56" y="247" fill="#72E3B6" font-size="13" font-weight="600">Overview</text>
+  <circle cx="197" cy="241.5" r="3" fill="#54D9A4"/>
+  <path d="M32 281h14v14H32zM35 284h8M35 288h5M35 292h7" stroke="#7E8A9E" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="56" y="292" class="body">Test runs</text>
+  <circle cx="193" cy="287" r="10" fill="#452522"/>
+  <text x="193" y="291" text-anchor="middle" fill="#FF9A7A" font-size="10" font-weight="700">3</text>
+  <path d="M32 322a7 7 0 1 1 2 5M32 322v-5m0 5h5" stroke="#7E8A9E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="56" y="333" class="body">Flaky tests</text>
+  <circle cx="193" cy="328" r="10" fill="#40371E"/>
+  <text x="193" y="332" text-anchor="middle" fill="#F0C56C" font-size="10" font-weight="700">7</text>
+
+  <text x="25" y="389" class="label">CONFIGURE</text>
+  <path d="M33 410h12M33 417h8M33 424h12" stroke="#7E8A9E" stroke-width="1.5" stroke-linecap="round"/>
+  <text x="56" y="421" class="body">Projects</text>
+  <circle cx="39" cy="458" r="7" stroke="#7E8A9E" stroke-width="1.5"/>
+  <path d="M39 454v8m-4-4h8" stroke="#7E8A9E" stroke-width="1.4" stroke-linecap="round"/>
+  <text x="56" y="463" class="body">Integrations</text>
+
+  <rect x="17" y="875" width="205" height="1" fill="#202633"/>
+  <circle cx="40" cy="914" r="16" fill="#253447"/>
+  <text x="40" y="918" text-anchor="middle" fill="#B9D1EC" font-size="11" font-weight="700">AG</text>
+  <text x="66" y="911" fill="#E0E6EF" font-size="12" font-weight="600">Atul Goyal</text>
+  <text x="66" y="927" class="muted" font-size="11">Local workspace</text>
+  <circle cx="200" cy="914" r="2" fill="#738094"/>
+  <circle cx="207" cy="914" r="2" fill="#738094"/>
+  <circle cx="214" cy="914" r="2" fill="#738094"/>
+
+  <!-- Main header -->
+  <text x="278" y="53" fill="#F2F5F9" font-size="24" font-weight="700">Good morning, Atul</text>
+  <text x="278" y="78" class="muted" font-size="13">Here’s how your test suite is doing today.</text>
+  <rect x="1144" y="31" width="118" height="38" rx="9" fill="#141A24" stroke="#293141"/>
+  <circle cx="1162" cy="50" r="4" fill="#55D6A2"/>
+  <text x="1173" y="54" fill="#CFD6E1" font-size="12" font-weight="600">Docker ready</text>
+  <rect x="1274" y="31" width="140" height="38" rx="9" fill="#43D09A"/>
+  <path d="M1291 50h14m-7-7v14" stroke="#0D2A20" stroke-width="1.8" stroke-linecap="round"/>
+  <text x="1314" y="54" fill="#08281D" font-size="12" font-weight="700">New test run</text>
+
+  <!-- Date / project context -->
+  <text x="278" y="123" fill="#E4E9F0" font-size="15" font-weight="650">Storefront E2E</text>
+  <circle cx="389" cy="119" r="2" fill="#677286"/>
+  <text x="401" y="123" class="muted" font-size="12">main</text>
+  <rect x="445" y="107" width="57" height="24" rx="6" fill="#18251F"/>
+  <circle cx="457" cy="119" r="3" fill="#52D49C"/>
+  <text x="466" y="123" fill="#78DBB0" font-size="10" font-weight="700">HEALTHY</text>
+  <rect x="1220" y="102" width="194" height="34" rx="8" fill="#111720" stroke="#252D3B"/>
+  <path d="M1237 113v11m-4-4 4 4 4-4" stroke="#9CA7B7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="1250" y="123" fill="#B8C1CE" font-size="11">Last 7 days</text>
+  <path d="m1398 117 4 4 4-4" stroke="#7F8A9A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- KPI cards -->
+  <g filter="url(#shadow)">
+    <rect x="278" y="153" width="269" height="123" rx="12" fill="#111720" stroke="#242C3A"/>
+    <rect x="565" y="153" width="269" height="123" rx="12" fill="#111720" stroke="#242C3A"/>
+    <rect x="852" y="153" width="269" height="123" rx="12" fill="#111720" stroke="#242C3A"/>
+    <rect x="1139" y="153" width="275" height="123" rx="12" fill="#111720" stroke="#242C3A"/>
+  </g>
+  <text x="299" y="180" class="small">PASS RATE</text>
+  <text x="299" y="222" fill="#F0F4F8" font-size="32" font-weight="700">96.8<tspan font-size="20">%</tspan></text>
+  <rect x="431" y="203" width="83" height="22" rx="6" fill="#16261F"/>
+  <path d="m443 216 4-4 3 2 5-6" stroke="#65DDB0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="461" y="218" fill="#6DDDB0" font-size="10" font-weight="650">+2.4%</text>
+  <text x="299" y="252" class="muted" font-size="11">vs. previous 7 days</text>
+
+  <text x="586" y="180" class="small">TEST RUNS</text>
+  <text x="586" y="222" fill="#F0F4F8" font-size="32" font-weight="700">248</text>
+  <rect x="659" y="203" width="80" height="22" rx="6" fill="#16261F"/>
+  <path d="m671 216 4-4 3 2 5-6" stroke="#65DDB0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="689" y="218" fill="#6DDDB0" font-size="10" font-weight="650">+18.2%</text>
+  <text x="586" y="252" class="muted" font-size="11">across 7 days</text>
+
+  <text x="873" y="180" class="small">FLAKY TESTS</text>
+  <text x="873" y="222" fill="#F0F4F8" font-size="32" font-weight="700">7</text>
+  <rect x="903" y="203" width="87" height="22" rx="6" fill="#2B2418"/>
+  <path d="m916 208 4 8h-8z" fill="#E9BC5F"/>
+  <text x="928" y="218" fill="#E9BC5F" font-size="10" font-weight="650">2 need attention</text>
+  <text x="873" y="252" class="muted" font-size="11">2.8% of your test suite</text>
+
+  <text x="1160" y="180" class="small">MEDIAN DURATION</text>
+  <text x="1160" y="222" fill="#F0F4F8" font-size="32" font-weight="700">4m 12s</text>
+  <rect x="1304" y="203" width="83" height="22" rx="6" fill="#211B1D"/>
+  <path d="m1317 209 4 8h-8z" fill="#F28F74"/>
+  <text x="1329" y="218" fill="#F19A82" font-size="10" font-weight="650">+12s slower</text>
+  <text x="1160" y="252" class="muted" font-size="11">vs. previous 7 days</text>
+
+  <!-- Pass rate chart -->
+  <rect x="278" y="294" width="750" height="323" rx="12" fill="#111720" stroke="#242C3A"/>
+  <text x="301" y="327" fill="#E7ECF3" font-size="14" font-weight="650">Test reliability</text>
+  <text x="301" y="347" class="muted" font-size="11">Pass rate and run volume over time</text>
+  <rect x="846" y="310" width="10" height="10" rx="3" fill="#4AD49E"/>
+  <text x="862" y="319" class="muted" font-size="10">Pass rate</text>
+  <rect x="929" y="310" width="10" height="10" rx="3" fill="#344052"/>
+  <text x="945" y="319" class="muted" font-size="10">Runs</text>
+  <path d="M330 390H1002M330 437H1002M330 484H1002M330 531H1002M330 578H1002" stroke="#222A37" stroke-dasharray="3 5"/>
+  <text x="303" y="394" class="dim" font-size="10">100%</text>
+  <text x="310" y="441" class="dim" font-size="10">95%</text>
+  <text x="310" y="488" class="dim" font-size="10">90%</text>
+  <text x="310" y="535" class="dim" font-size="10">85%</text>
+  <text x="310" y="582" class="dim" font-size="10">80%</text>
+  <path d="M347 542 438 500 531 514 624 461 717 470 810 426 903 445 994 407V578H347Z" fill="url(#chart)"/>
+  <path d="M347 542 438 500 531 514 624 461 717 470 810 426 903 445 994 407" stroke="#4AD49E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="347" cy="542" r="4" fill="#4AD49E" stroke="#111720" stroke-width="2"/>
+  <circle cx="438" cy="500" r="4" fill="#4AD49E" stroke="#111720" stroke-width="2"/>
+  <circle cx="531" cy="514" r="4" fill="#4AD49E" stroke="#111720" stroke-width="2"/>
+  <circle cx="624" cy="461" r="4" fill="#4AD49E" stroke="#111720" stroke-width="2"/>
+  <circle cx="717" cy="470" r="4" fill="#4AD49E" stroke="#111720" stroke-width="2"/>
+  <circle cx="810" cy="426" r="4" fill="#4AD49E" stroke="#111720" stroke-width="2"/>
+  <circle cx="903" cy="445" r="4" fill="#4AD49E" stroke="#111720" stroke-width="2"/>
+  <circle cx="994" cy="407" r="5" fill="#4AD49E" stroke="#111720" stroke-width="2"/>
+  <text x="347" y="601" text-anchor="middle" class="dim" font-size="10">Oct 14</text>
+  <text x="438" y="601" text-anchor="middle" class="dim" font-size="10">Oct 15</text>
+  <text x="531" y="601" text-anchor="middle" class="dim" font-size="10">Oct 16</text>
+  <text x="624" y="601" text-anchor="middle" class="dim" font-size="10">Oct 17</text>
+  <text x="717" y="601" text-anchor="middle" class="dim" font-size="10">Oct 18</text>
+  <text x="810" y="601" text-anchor="middle" class="dim" font-size="10">Oct 19</text>
+  <text x="903" y="601" text-anchor="middle" class="dim" font-size="10">Oct 20</text>
+  <text x="994" y="601" text-anchor="middle" class="dim" font-size="10">Today</text>
+
+  <!-- Latest run summary -->
+  <rect x="1046" y="294" width="368" height="323" rx="12" fill="#111720" stroke="#242C3A"/>
+  <text x="1069" y="327" fill="#E7ECF3" font-size="14" font-weight="650">Latest run</text>
+  <text x="1069" y="347" class="muted" font-size="11">#run-8f42c1 · 6 minutes ago</text>
+  <rect x="1317" y="311" width="75" height="22" rx="6" fill="#30271A"/>
+  <circle cx="1329" cy="322" r="3" fill="#E9BC5F"/>
+  <text x="1338" y="326" fill="#E9BC5F" font-size="9" font-weight="700">FLAKY</text>
+  <path d="M1069 369H1391" stroke="#242C3A"/>
+  <text x="1069" y="395" class="small">Branch</text>
+  <text x="1217" y="395" text-anchor="end" fill="#DCE3EC" font-size="11">main</text>
+  <text x="1069" y="423" class="small">Commit</text>
+  <text x="1217" y="423" text-anchor="end" fill="#AFC8E8" font-size="11" class="mono">a31c9e2</text>
+  <text x="1240" y="395" class="small">Duration</text>
+  <text x="1391" y="395" text-anchor="end" fill="#DCE3EC" font-size="11">4m 38s</text>
+  <text x="1240" y="423" class="small">Environment</text>
+  <text x="1391" y="423" text-anchor="end" fill="#DCE3EC" font-size="11">Docker · isolated</text>
+  <rect x="1069" y="445" width="322" height="1" fill="#242C3A"/>
+  <text x="1069" y="473" fill="#DCE3EC" font-size="11" font-weight="600">Test results</text>
+  <text x="1391" y="473" text-anchor="end" class="muted" font-size="10">82 tests</text>
+  <rect x="1069" y="486" width="322" height="7" rx="3.5" fill="#252D3A"/>
+  <rect x="1069" y="486" width="290" height="7" rx="3.5" fill="#4AD49E"/>
+  <rect x="1359" y="486" width="20" height="7" fill="#E7B95B"/>
+  <rect x="1379" y="486" width="12" height="7" rx="3.5" fill="#E87565"/>
+  <circle cx="1074" cy="516" r="4" fill="#4AD49E"/>
+  <text x="1085" y="520" class="small">Passed</text>
+  <text x="1140" y="520" fill="#E0E6EF" font-size="11" font-weight="650">74</text>
+  <circle cx="1190" cy="516" r="4" fill="#E7B95B"/>
+  <text x="1201" y="520" class="small">Flaky</text>
+  <text x="1242" y="520" fill="#E0E6EF" font-size="11" font-weight="650">5</text>
+  <circle cx="1292" cy="516" r="4" fill="#E87565"/>
+  <text x="1303" y="520" class="small">Failed</text>
+  <text x="1345" y="520" fill="#E0E6EF" font-size="11" font-weight="650">3</text>
+  <rect x="1069" y="544" width="322" height="49" rx="8" fill="#221E17" stroke="#40351F"/>
+  <path d="m1087 562 6 12h-12z" fill="#E7B95B"/>
+  <text x="1104" y="564" fill="#E7C777" font-size="11" font-weight="600">3 tests need attention</text>
+  <text x="1104" y="580" fill="#AFA58C" font-size="10">Review failures and flaky retries</text>
+  <path d="m1372 563 5 5-5 5" stroke="#D5BE84" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Runs list -->
+  <rect x="278" y="637" width="1136" height="326" rx="12" fill="#111720" stroke="#242C3A"/>
+  <text x="301" y="672" fill="#E7ECF3" font-size="14" font-weight="650">Recent test runs</text>
+  <text x="301" y="692" class="muted" font-size="11">Your latest Docker-isolated test executions</text>
+  <rect x="1261" y="652" width="130" height="32" rx="7" fill="#161D28" stroke="#293141"/>
+  <path d="M1275 663h12m-10 4h8m-6 4h4" stroke="#9DA7B6" stroke-width="1.3" stroke-linecap="round"/>
+  <text x="1293" y="673" fill="#BFC8D5" font-size="10">Filter runs</text>
+  <path d="M300 714H1392" stroke="#27303D"/>
+  <text x="301" y="738" class="label" font-size="9">RESULT</text>
+  <text x="430" y="738" class="label" font-size="9">RUN / COMMIT</text>
+  <text x="738" y="738" class="label" font-size="9">BRANCH</text>
+  <text x="900" y="738" class="label" font-size="9">TRIGGERED</text>
+  <text x="1092" y="738" class="label" font-size="9">DURATION</text>
+  <text x="1230" y="738" class="label" font-size="9">TESTS</text>
+  <text x="1366" y="738" class="label" font-size="9">EVIDENCE</text>
+
+  <path d="M300 751H1392" stroke="#202835"/>
+  <circle cx="317" cy="775" r="7" fill="#183326"/>
+  <path d="m314 775 2 2 4-4" stroke="#58D7A2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="332" y="779" fill="#73DDAF" font-size="10" font-weight="650">PASSED</text>
+  <text x="430" y="775" fill="#DBE2EC" font-size="11" font-weight="600">#run-8f42bf</text>
+  <text x="430" y="790" class="dim" font-size="10">c2f119a</text>
+  <text x="738" y="781" fill="#C6CEDA" font-size="11">main</text>
+  <text x="900" y="781" class="small">Today, 10:42 AM</text>
+  <text x="1092" y="781" class="small">3m 54s</text>
+  <text x="1230" y="781" fill="#C6CEDA" font-size="10">82 / 82 passed</text>
+  <path d="M1372 772h14v13h-14zM1375 775h8m-8 3h8m-8 3h5" stroke="#8793A5" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M300 803H1392" stroke="#202835"/>
+  <circle cx="317" cy="827" r="7" fill="#30271A"/>
+  <path d="m317 822 4 8h-8z" fill="#E7B95B"/>
+  <text x="332" y="831" fill="#E5C16C" font-size="10" font-weight="650">FLAKY</text>
+  <text x="430" y="827" fill="#DBE2EC" font-size="11" font-weight="600">#run-8f42a8</text>
+  <text x="430" y="842" class="dim" font-size="10">a31c9e2</text>
+  <text x="738" y="833" fill="#C6CEDA" font-size="11">main</text>
+  <text x="900" y="833" class="small">Today, 9:18 AM</text>
+  <text x="1092" y="833" class="small">4m 38s</text>
+  <text x="1230" y="833" fill="#C6CEDA" font-size="10">74 passed · 5 flaky · 3 failed</text>
+  <path d="M1372 824h14v13h-14zM1375 827h8m-8 3h8m-8 3h5" stroke="#8793A5" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M300 855H1392" stroke="#202835"/>
+  <circle cx="317" cy="879" r="7" fill="#351F20"/>
+  <path d="m314 876 6 6m0-6-6 6" stroke="#F08573" stroke-width="1.5" stroke-linecap="round"/>
+  <text x="332" y="883" fill="#F18E7C" font-size="10" font-weight="650">FAILED</text>
+  <text x="430" y="879" fill="#DBE2EC" font-size="11" font-weight="600">#run-8f419d</text>
+  <text x="430" y="894" class="dim" font-size="10">81be440</text>
+  <text x="738" y="885" fill="#C6CEDA" font-size="11">feat/cart-v2</text>
+  <text x="900" y="885" class="small">Today, 8:05 AM</text>
+  <text x="1092" y="885" class="small">2m 11s</text>
+  <text x="1230" y="885" fill="#C6CEDA" font-size="10">79 passed · 3 failed</text>
+  <path d="M1372 876h14v13h-14zM1375 879h8m-8 3h8m-8 3h5" stroke="#8793A5" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M300 907H1392" stroke="#202835"/>
+  <circle cx="317" cy="931" r="7" fill="#183326"/>
+  <path d="m314 931 2 2 4-4" stroke="#58D7A2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="332" y="935" fill="#73DDAF" font-size="10" font-weight="650">PASSED</text>
+  <text x="430" y="931" fill="#DBE2EC" font-size="11" font-weight="600">#run-8f3ff2</text>
+  <text x="430" y="946" class="dim" font-size="10">713bd10</text>
+  <text x="738" y="937" fill="#C6CEDA" font-size="11">main</text>
+  <text x="900" y="937" class="small">Yesterday, 5:44 PM</text>
+  <text x="1092" y="937" class="small">4m 02s</text>
+  <text x="1230" y="937" fill="#C6CEDA" font-size="10">82 / 82 passed</text>
+  <path d="M1372 928h14v13h-14zM1375 931h8m-8 3h8m-8 3h5" stroke="#8793A5" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
