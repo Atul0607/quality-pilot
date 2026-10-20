@@ -205,7 +205,9 @@ def render_index(records: list[RunRecord], warnings: list[str]) -> str:
 
 def _evidence_path(run: RunRecord, relative_path: str) -> Path | None:
     path = Path(relative_path)
-    if path.is_absolute() or ".." in path.parts:
+    if path.is_absolute() or ".." in path.parts or (
+        relative_path != "report.md" and relative_path not in run.evidence
+    ):
         return None
     try:
         resolved = (run.directory / path).resolve(strict=True)

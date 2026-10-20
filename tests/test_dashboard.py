@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 from threading import Thread
 import unittest
 from urllib.error import HTTPError
+from urllib.parse import quote
 from urllib.request import urlopen
 
 from quality_pilot.dashboard import create_server, load_runs, render_detail, render_index
@@ -132,6 +133,7 @@ class DashboardTests(unittest.TestCase):
             evidence = run_directory / "attempts" / "01" / "test-output.log"
             evidence.parent.mkdir(parents=True)
             evidence.write_text("captured test output", encoding="utf-8")
+            (run_directory / "internal.txt").write_text("not evidence", encoding="utf-8")
 
             server = create_server(root, "127.0.0.1", 0)
             thread = Thread(target=server.serve_forever, daemon=True)
@@ -155,13 +157,21 @@ class DashboardTests(unittest.TestCase):
                     self.assertIn("attachment;", response.headers["Content-Disposition"])
                     self.assertEqual(response.read().decode(), "captured test output")
 
-                try:
-                    urlopen(f"{base_url}/runs/run-passed/evidence/%2E%2E/secret.txt")
-                except HTTPError as error:
-                    self.assertEqual(error.code, 404)
-                    error.close()
-                else:
-                    self.fail("Evidence traversal request unexpectedly succeeded.")
+                for unlisted_path in ("run.json", "internal.txt", "../secret.txt"):
+                    with self.subTest(path=unlisted_path):
+                        try:
+                            urlopen(
+                                f"{base_url}/runs/run-passed/evidence/{quote(unlisted_path, safe='/')}"
+                            )
+                        except HTTPError as error:
+                            self.assertEqual(error.code, 404)
+                            error.close()
+                        else:
+                            self.fail(f"Unlisted evidence path was served: {unlisted_path}")
+
+                with urlopen(f"{base_url}/runs/run-passed/evidence/report.md") as response:
+                    self.assertEqual(response.status, 200)
+                    self.assertEqual(response.read().decode(), "# saved report\n")
             finally:
                 server.shutdown()
                 thread.join(timeout=5)
