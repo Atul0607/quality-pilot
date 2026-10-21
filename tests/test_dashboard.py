@@ -133,6 +133,9 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('localStorage.setItem(storageKey, theme)', page)
             self.assertIn("Test reliability", page)
             self.assertIn("Pass rate", page)
+            self.assertNotIn("QUALITY OVERVIEW", page)
+            self.assertNotIn('<p class="eyebrow">', page)
+            self.assertNotIn('<p class="side-label">MONITOR</p>', page)
             self.assertIn('<option value="all" selected>All dates</option>', page)
             overview_date_form = page.split(
                 '<form class="filter date-filter"', 1
@@ -223,6 +226,9 @@ class DashboardTests(unittest.TestCase):
                 runs_page,
             )
             self.assertNotIn("<h2>Test runs</h2>", runs_page)
+            self.assertIn("<h1>Test runs</h1>", runs_page)
+            self.assertNotIn("MONITOR</p>", runs_page)
+            self.assertNotIn('<p class="eyebrow">', runs_page)
             self.assertIn(
                 ".run-summary { display:grid; "
                 "grid-template-columns:repeat(3,minmax(0,1fr));",

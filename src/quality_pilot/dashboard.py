@@ -155,7 +155,6 @@ def _page(
     .brand-mark {{ display:grid; width:36px; height:36px; place-items:center; border-radius:11px; background:linear-gradient(145deg,#83f2c2,#40b98e); color:#10231e; font-size:23px; font-weight:800; }}
     .brand-name {{ display:block; font-size:15px; font-weight:750; }}
     .brand-subtitle {{ display:block; color:#738094; font-size:9px; font-weight:650; letter-spacing:.12em; margin-top:2px; }}
-    .side-label {{ margin:0 8px 10px; color:#8993a6; font-size:10px; font-weight:700; letter-spacing:.1em; }}
     .side-nav {{ display:grid; gap:5px; margin-bottom:28px; }}
     .side-nav a {{ display:flex; align-items:center; justify-content:space-between; min-height:39px; padding:0 11px; border-radius:8px; color:#c5cedb; text-decoration:none; font-size:13px; }}
     .side-nav a span {{ display:flex; align-items:center; gap:10px; }}
@@ -181,7 +180,6 @@ def _page(
     h2 {{ margin:0; color:#e7ecf3; font-size:14px; }}
     p {{ line-height:1.5; }}
     .muted {{ color:#8993a6; }}
-    .eyebrow {{ margin:0 0 7px; color:#8993a6; font-size:12px; }}
     .context {{ display:flex; align-items:center; gap:9px; margin-bottom:17px; color:#c5cedb; font-size:12px; }}
     .context-dot {{ color:#586477; }}
     .stats {{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin:0 0 16px; }}
@@ -260,16 +258,14 @@ def _page(
     .detail-panel {{ margin-bottom:16px; }}
     .empty {{ padding:35px 20px; color:#8993a6; text-align:center; }}
     code {{ color:#c6d7ef; overflow-wrap:anywhere; }}
-    .brand {{ margin-bottom:40px; }}
+    .brand {{ margin-bottom:28px; }}
     :root[data-theme="light"] {{ color-scheme:light; color:#182230; background:#f4f6fa; }}
     :root[data-theme="light"] a {{ color:#2459bd; }}
     :root[data-theme="light"] .sidebar {{ background:#fff; border-color:#e0e6ef; }}
     :root[data-theme="light"] .brand {{ color:#182230; }}
     :root[data-theme="light"] .brand-subtitle,
-    :root[data-theme="light"] .side-label,
     :root[data-theme="light"] .workspace-path,
     :root[data-theme="light"] .muted,
-    :root[data-theme="light"] .eyebrow,
     :root[data-theme="light"] .panel-subtitle,
     :root[data-theme="light"] .chart-empty,
     :root[data-theme="light"] .meta-label,
@@ -359,7 +355,6 @@ def _page(
       <span class="brand-mark" aria-hidden="true">✓</span>
       <span><span class="brand-name">quality pilot</span><span class="brand-subtitle">TEST RELIABILITY</span></span>
     </a>
-    <p class="side-label">MONITOR</p>
     <nav class="side-nav" aria-label="Monitor">
       <a class="has-tooltip{overview_active}"{overview_current} data-tooltip="View quality metrics and reliability trends" href="{overview_url}" title="View quality metrics and reliability trends"><span><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h5v5H3zM12 3h5v5h-5zM3 12h5v5H3zM12 12h5v5h-5z"/></svg>Overview</span></a>
       <a class="has-tooltip{test_runs_active}"{test_runs_current} data-tooltip="Browse and filter recorded test runs" href="{test_runs_url}" title="Browse and filter recorded test runs"><span><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4h14M3 8h14M3 12h9M3 16h9"/><circle cx="15" cy="14" r="2.5"/></svg>Test runs</span>{run_badge}</a>
@@ -882,16 +877,14 @@ def render_index(
         )
     if runs_page:
         body = (
-            '<div class="page-head"><div><p class="eyebrow">MONITOR</p>'
-            "<h1>Test runs</h1>"
+            '<div class="page-head"><div><h1>Test runs</h1>'
             '<p class="muted">Run results and failed test cases.</p></div></div>'
             f'{date_filter}'
             f"{warning_html}{toolbar}{run_table}{pagination}"
         )
     else:
         body = (
-            '<div class="page-head"><div><p class="eyebrow">QUALITY OVERVIEW</p>'
-            "<h1>Run health</h1>"
+            '<div class="page-head"><div><h1>Run health</h1>'
             '<p class="muted">Reliability trends from your recorded test runs.</p></div></div>'
             f'{date_filter}'
             f'<div class="stats">{cards}</div>'
