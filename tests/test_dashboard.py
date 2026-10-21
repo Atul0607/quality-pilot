@@ -299,7 +299,20 @@ class DashboardTests(unittest.TestCase):
             self.assertIn("run-flaky", flaky_tests_page)
             self.assertNotIn("run-failed", flaky_tests_page)
             self.assertIn('option value="all" selected', flaky_tests_page)
+            flaky_filter_form = flaky_tests_page.split(
+                '<form class="filter date-filter"', 1
+            )[1].split("</form>", 1)[0]
+            self.assertIn('type="hidden" name="status" value="flaky_tests"', flaky_filter_form)
+            self.assertIn('<select id="status" name="result">', flaky_filter_form)
             self.assertNotIn("Needs attention", flaky_tests_page)
+            timed_runs_page = render_index(
+                records, warnings, "timed_runs", period="all", runs_page=True
+            )
+            timed_filter_form = timed_runs_page.split(
+                '<form class="filter date-filter"', 1
+            )[1].split("</form>", 1)[0]
+            self.assertIn('type="hidden" name="status" value="timed_runs"', timed_filter_form)
+            self.assertIn('<select id="status" name="result">', timed_filter_form)
             self.assertNotIn(
                 "payment declined",
                 render_index(records, warnings, "passed", period="all", runs_page=True),
@@ -589,12 +602,31 @@ class DashboardTests(unittest.TestCase):
                     self.assertIn("run-flaky", flaky_index)
                     self.assertNotIn("run-failed", flaky_index)
 
+                with urlopen(
+                    f"{base_url}/runs?status=flaky_tests&result=failed&period=all"
+                ) as response:
+                    filtered_flaky_index = response.read().decode()
+                    self.assertIn("run-failed", filtered_flaky_index)
+                    self.assertNotIn("run-flaky", filtered_flaky_index)
+                    self.assertIn('option value="failed" selected', filtered_flaky_index)
+
+                with urlopen(
+                    f"{base_url}/runs?status=timed_runs&result=failed&period=all"
+                ) as response:
+                    filtered_timed_index = response.read().decode()
+                    self.assertIn("run-failed", filtered_timed_index)
+                    self.assertNotIn("run-passed", filtered_timed_index)
+
                 with urlopen(f"{base_url}/runs?status=timed_runs&period=all") as response:
                     timed_index = response.read().decode()
                     self.assertEqual(response.status, 200)
                     self.assertIn("run-passed", timed_index)
                     self.assertNotIn("Runs with duration data", timed_index)
-                    self.assertNotIn('value="timed_runs"', timed_index)
+                    self.assertNotIn('<option value="timed_runs"', timed_index)
+                    self.assertIn(
+                        'type="hidden" name="status" value="timed_runs"',
+                        timed_index,
+                    )
 
                 with urlopen(f"{base_url}/runs/run-passed") as response:
                     detail = response.read().decode()

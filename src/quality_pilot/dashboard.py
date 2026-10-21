@@ -815,11 +815,21 @@ def render_index(
         "</span>"
     )
     if runs_page:
+        if status_filter in {"flaky_tests", "timed_runs"}:
+            status_control = (
+                f'<input type="hidden" name="status" value="{status_filter}">'
+                '<label for="status">Filter by result</label>'
+                f'<select id="status" name="result">{options}</select>'
+            )
+        else:
+            status_control = (
+                '<label for="status">Filter by result</label>'
+                f'<select id="status" name="status">{options}</select>'
+            )
         date_filter = (
             '<form class="filter date-filter" action="/runs" method="get">'
             f"{date_controls}"
-            '<label for="status">Filter by result</label>'
-            f'<select id="status" name="status">{options}</select>'
+            f"{status_control}"
             '<button type="submit">Apply</button></form>'
         )
     else:
@@ -1054,8 +1064,10 @@ def create_server(artifacts_dir: Path, host: str, port: int) -> ThreadingHTTPSer
                 except OSError as exc:
                     self._respond(500, _escape(exc).encode(), "text/plain; charset=utf-8")
                     return
-                requested_status = parse_qs(parsed_url.query).get("status", ["all"])[0]
                 query = parse_qs(parsed_url.query)
+                requested_status = query.get(
+                    "result", query.get("status", ["all"])
+                )[0]
                 valid_statuses = {
                     "all", *_OUTCOMES, "unknown", "flaky_tests", "timed_runs"
                 }
