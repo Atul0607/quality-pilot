@@ -1032,20 +1032,28 @@ def render_index(
                 '<label for="status">Filter by result</label>'
                 f'<select id="status" name="status">{options}</select>'
             )
+        demo_control = (
+            '<input type="hidden" name="demo" value="1">' if demo_mode else ""
+        )
         date_filter = (
             f'<form class="filter date-filter" '
-            f'action="/runs{"?demo=1" if demo_mode else ""}" method="get">'
+            'action="/runs" method="get">'
             f"{date_controls}"
             f"{status_control}"
+            f"{demo_control}"
             '<button type="submit">Apply</button></form>'
         )
     else:
+        demo_control = (
+            '<input type="hidden" name="demo" value="1">' if demo_mode else ""
+        )
         date_filter = (
             f'<form class="filter date-filter" '
-            f'action="/{"?demo=1" if demo_mode else ""}" '
+            'action="/" '
             'method="get" data-auto-apply="true">'
             '<input type="hidden" name="status" value="'
             f'{_escape(status_filter)}">'
+            f"{demo_control}"
             f"{date_controls}"
             "</form>"
         )

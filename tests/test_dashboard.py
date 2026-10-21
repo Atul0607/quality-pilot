@@ -851,7 +851,19 @@ class DashboardTests(unittest.TestCase):
                     self.assertNotIn('class="demo-notice"', demo_runs)
                     self.assertIn("demo-002-passed", demo_runs)
                     self.assertNotIn("real-run-001", demo_runs)
-                    self.assertIn('action="/runs?demo=1"', demo_runs)
+                    self.assertIn('action="/runs" method="get"', demo_runs)
+                    self.assertIn(
+                        '<input type="hidden" name="demo" value="1">',
+                        demo_runs,
+                    )
+
+                with urlopen(f"{base_url}/?demo=1&period=all") as response:
+                    demo_overview = response.read().decode()
+                    self.assertIn('action="/"', demo_overview)
+                    self.assertIn(
+                        '<input type="hidden" name="demo" value="1">',
+                        demo_overview,
+                    )
 
                 with urlopen(
                     f"{base_url}/runs?demo=1&status=failed&period=all"
