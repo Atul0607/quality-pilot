@@ -255,6 +255,8 @@ class DashboardTests(unittest.TestCase):
             )[1].split("</form>", 1)[0]
             self.assertIn('<select id="period" name="period">', combined_filter)
             self.assertIn('<select id="status" name="status">', combined_filter)
+            self.assertIn(".date-filter select { width:160px; min-height:36px; }", runs_page)
+            self.assertIn(".date-filter button { min-height:36px; }", runs_page)
             self.assertEqual(combined_filter.count('type="submit"'), 1)
             self.assertNotIn('value="flaky_tests"', combined_filter)
             self.assertNotIn('value="timed_runs"', combined_filter)

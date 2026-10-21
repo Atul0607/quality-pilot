@@ -226,6 +226,8 @@ def _page(
     select,input[type="date"],.filter button {{ border:1px solid #293141; border-radius:7px; background:#161d28; color:#dce3ec; font:inherit; padding:.5rem .65rem; }}
     .filter button {{ cursor:pointer; }}
     .date-filter {{ justify-content:flex-start; margin:0 0 18px; }}
+    .date-filter select {{ width:160px; min-height:36px; }}
+    .date-filter button {{ min-height:36px; }}
     .date-range {{ display:flex; flex-wrap:wrap; align-items:center; gap:.45rem; }}
     .date-range[hidden] {{ display:none; }}
     .showing {{ margin:0 0 9px; color:#8993a6; font-size:12px; }}
