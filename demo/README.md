@@ -2,6 +2,10 @@
 
 This demo is a real, small FastAPI storefront, backed by PostgreSQL in Docker Compose (SQLite remains available for standalone development), that Quality Pilot runs as a Compose service. The test service uses pytest, Playwright Chromium, and Requests against that live app over the Compose network; tests do not mock the application or call its Python functions directly.
 
+## Dashboard sample runs
+
+[`dashboard_runs.json`](dashboard_runs.json) defines the dashboard's illustrative run outcomes. The dashboard expands these outcome templates across every day in the last 90 days and an older sample date, so every outcome can be exercised with each preset date range and with custom ranges in that window. These samples are generated in memory and are never written to a project's run artifacts.
+
 ## Run through Quality Pilot
 
 Run the smoke suite with one Compose command from the repository root:

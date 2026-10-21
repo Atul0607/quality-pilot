@@ -3,6 +3,8 @@ from __future__ import annotations
 import html
 import json
 import mimetypes
+import sysconfig
+from copy import deepcopy
 from statistics import median
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -128,13 +130,23 @@ def _page(
     period: str = "last_7_days",
     start_date: str = "",
     end_date: str = "",
+    get_started_page: bool = False,
+    demo_mode: bool = False,
 ) -> str:
-    overview_active = " active" if not runs_page else ""
-    overview_current = ' aria-current="page"' if not runs_page else ""
+    overview_active = " active" if not runs_page and not get_started_page else ""
+    overview_current = (
+        ' aria-current="page"' if not runs_page and not get_started_page else ""
+    )
     test_runs_active = " active" if runs_page else ""
     test_runs_current = ' aria-current="page"' if runs_page else ""
-    test_runs_url = _dashboard_url("all", period, start_date, end_date, True)
-    overview_url = _dashboard_url("all", period, start_date, end_date, False)
+    get_started_active = " active" if get_started_page else ""
+    get_started_current = ' aria-current="page"' if get_started_page else ""
+    test_runs_url = _dashboard_url(
+        "all", period, start_date, end_date, True, demo_mode=demo_mode
+    )
+    overview_url = _dashboard_url(
+        "all", period, start_date, end_date, False, demo_mode=demo_mode
+    )
     run_badge = (
         f'<span class="nav-count">{run_count}</span>' if run_count is not None else ""
     )
@@ -222,6 +234,21 @@ def _page(
     .run-summary-card.passed span,.run-summary-card.passed strong {{ color:#65dfa8; }}
     .run-summary-card.failed {{ border-color:#a34c4c; background:#2a191b; }}
     .run-summary-card.failed span,.run-summary-card.failed strong {{ color:#f08b83; }}
+    .get-started {{ margin-bottom:16px; }}
+    .demo-notice {{ margin:0 0 16px; padding:11px 14px; border:1px solid #394961; border-radius:8px; background:#141e2c; color:#c5d5eb; font-size:12px; }}
+    .demo-notice strong {{ color:#eef4fc; }}
+    .demo-notice a {{ margin-left:5px; }}
+    :root[data-theme="light"] .demo-notice {{ border-color:#c7d8ef; background:#f1f6fd; color:#3e5069; }}
+    :root[data-theme="light"] .demo-notice strong {{ color:#182230; }}
+    .get-started-intro {{ margin:0 0 18px; color:#aab3c3; }}
+    .setup-steps {{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }}
+    .setup-step {{ min-width:0; padding:16px; border:1px solid #242c3a; border-radius:9px; background:#0e141d; }}
+    .setup-step h3 {{ margin:0 0 8px; color:#e7ecf3; font-size:13px; }}
+    .setup-step p {{ margin:0 0 10px; color:#aab3c3; font-size:12px; }}
+    .setup-step code {{ color:#c6d7ef; }}
+    .setup-step pre {{ max-width:100%; overflow-x:auto; white-space:pre-wrap; margin:10px 0 0; padding:11px 12px; border:1px solid #293141; border-radius:7px; background:#0b0e14; color:#dce3ec; font-size:12px; line-height:1.5; }}
+    .setup-step pre code {{ color:inherit; }}
+    .setup-step a {{ color:#9fc5fa; }}
     .filter {{ display:flex; flex-wrap:wrap; align-items:center; gap:.55rem; color:#aab3c3; font-size:.8rem; }}
     select,input[type="date"],.filter button {{ border:1px solid #293141; border-radius:7px; background:#161d28; color:#dce3ec; font:inherit; padding:.5rem .65rem; }}
     .filter button {{ cursor:pointer; }}
@@ -320,6 +347,11 @@ def _page(
     :root[data-theme="light"] .run-summary-card.failed {{ border-color:#e6a2a0; background:#fff0ef; }}
     :root[data-theme="light"] .run-summary-card.failed span,
     :root[data-theme="light"] .run-summary-card.failed strong {{ color:#9b302d; }}
+    :root[data-theme="light"] .get-started-intro,
+    :root[data-theme="light"] .setup-step p {{ color:#46546a; }}
+    :root[data-theme="light"] .setup-step {{ border-color:#e0e6ef; background:#f8f9fc; }}
+    :root[data-theme="light"] .setup-step h3 {{ color:#182230; }}
+    :root[data-theme="light"] .setup-step pre {{ border-color:#d7deea; background:#182230; color:#f0f4f8; }}
     :root[data-theme="light"] .pagination a {{ border-color:#cbd4e1; color:#46546a; }}
     :root[data-theme="light"] .pagination a:hover {{ border-color:#91a8d1; color:#182230; }}
     :root[data-theme="light"] select,
@@ -347,8 +379,8 @@ def _page(
     :root[data-theme="light"] .chart circle {{ fill:#21976e; stroke:#fff; }}
     @media (max-width:1000px) {{ .sidebar {{ width:205px; flex-basis:205px; }} .app-main {{ width:calc(100% - 205px); padding:26px 24px; }} }}
     @media (max-width:1100px) {{ .stats {{ grid-template-columns:repeat(2,minmax(0,1fr)); }} .overview-grid {{ grid-template-columns:1fr; }} }}
-    @media (max-width:700px) {{ body {{ display:block; }} .sidebar {{ width:100%; min-height:0; padding:12px 16px; border-right:0; border-bottom:1px solid #202633; }} .side-label,.sidebar-footer {{ display:none; }} .side-nav {{ display:flex; margin:0; }} .side-nav a {{ min-height:34px; }} .app-main {{ width:100%; padding:24px 16px 36px; }} .stats {{ grid-template-columns:repeat(2,minmax(0,1fr)); }} .page-head {{ flex-direction:column; }} .toolbar {{ align-items:flex-start; flex-direction:column; }} .toolbar-title {{ width:100%; }} .quick-filters {{ max-width:none; grid-template-columns:repeat(2,minmax(0,1fr)); }} }}
-    @media (max-width:420px) {{ .stats,.run-summary {{ grid-template-columns:1fr; }} .date-filter {{ align-items:flex-start; }} }}
+    @media (max-width:700px) {{ body {{ display:block; }} .sidebar {{ width:100%; min-height:0; padding:12px 16px; border-right:0; border-bottom:1px solid #202633; }} .side-label,.sidebar-footer {{ display:none; }} .side-nav {{ display:flex; margin:0; }} .side-nav a {{ min-height:34px; }} .app-main {{ width:100%; padding:24px 16px 36px; }} .stats,.setup-steps {{ grid-template-columns:repeat(2,minmax(0,1fr)); }} .page-head {{ flex-direction:column; }} .toolbar {{ align-items:flex-start; flex-direction:column; }} .toolbar-title {{ width:100%; }} .quick-filters {{ max-width:none; grid-template-columns:repeat(2,minmax(0,1fr)); }} }}
+    @media (max-width:420px) {{ .stats,.run-summary,.setup-steps {{ grid-template-columns:1fr; }} .date-filter {{ align-items:flex-start; }} }}
   </style>
 </head>
 <body>
@@ -360,6 +392,7 @@ def _page(
     <nav class="side-nav" aria-label="Monitor">
       <a class="has-tooltip{overview_active}"{overview_current} data-tooltip="View quality metrics and reliability trends" href="{overview_url}" title="View quality metrics and reliability trends"><span><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h5v5H3zM12 3h5v5h-5zM3 12h5v5H3zM12 12h5v5h-5z"/></svg>Overview</span></a>
       <a class="has-tooltip{test_runs_active}"{test_runs_current} data-tooltip="Browse and filter recorded test runs" href="{test_runs_url}" title="Browse and filter recorded test runs"><span><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4h14M3 8h14M3 12h9M3 16h9"/><circle cx="15" cy="14" r="2.5"/></svg>Test runs</span>{run_badge}</a>
+      <a class="has-tooltip{get_started_active}"{get_started_current} data-tooltip="Set up QualityPilot for your project" href="/get-started" title="Set up QualityPilot for your project"><span><svg class="nav-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v16M2 10h16"/><circle cx="10" cy="10" r="7"/></svg>Get started</span></a>
     </nav>
     <div class="sidebar-footer"><strong>Local workspace</strong><span class="workspace-path">.quality-pilot/runs</span></div>
   </aside>
@@ -522,12 +555,18 @@ def _chart_label(record: RunRecord) -> str:
     return record.run_id[-4:]
 
 
-def _run_detail_url(run_id: str, return_to: str) -> str:
-    params = urlencode({"return_to": return_to})
-    return _escape(f"/runs/{quote(run_id, safe='')}?{params}")
+def _run_detail_url(run_id: str, return_to: str, demo_mode: bool = False) -> str:
+    params = {"return_to": return_to}
+    if demo_mode:
+        params["demo"] = "1"
+    return _escape(f"/runs/{quote(run_id, safe='')}?{urlencode(params)}")
 
 
-def _latest_run_panel(record: RunRecord | None, return_to: str = "/runs") -> str:
+def _latest_run_panel(
+    record: RunRecord | None,
+    return_to: str = "/runs",
+    demo_mode: bool = False,
+) -> str:
     if record is None:
         return (
             '<section class="panel"><div class="panel-title"><h2>Latest run</h2></div>'
@@ -558,7 +597,8 @@ def _latest_run_panel(record: RunRecord | None, return_to: str = "/runs") -> str
         '<div><span class="meta-label">Result</span>'
         f'<span class="meta-value">{_escape(record.outcome.title())}</span></div>'
         f'</div><div class="result-summary">{summary}</div>'
-        f'<p><a href="{_run_detail_url(record.run_id, return_to)}">View run details →</a></p>'
+        f'<p><a href="{_run_detail_url(record.run_id, return_to, demo_mode)}">'
+        "View run details →</a></p>"
         '</section>'
     )
 
@@ -623,13 +663,153 @@ def _dashboard_url(
     end_date: str,
     runs_page: bool,
     page: int = 1,
+    demo_mode: bool = False,
 ) -> str:
     params = {"status": status, "period": period}
+    if demo_mode:
+        params["demo"] = "1"
     if period == "custom":
         params.update({"start_date": start_date, "end_date": end_date})
     if runs_page and page > 1:
         params["page"] = str(page)
     return _escape(f"{'/runs' if runs_page else '/'}?{urlencode(params)}")
+
+
+def _demo_records() -> list[RunRecord]:
+    source_fixture = (
+        Path(__file__).resolve().parents[2] / "demo" / "dashboard_runs.json"
+    )
+    installed_fixture = (
+        Path(sysconfig.get_path("data"))
+        / "share"
+        / "quality-pilot"
+        / "dashboard_runs.json"
+    )
+    fixture_path = next(
+        (path for path in (source_fixture, installed_fixture) if path.is_file()),
+        None,
+    )
+    if fixture_path is None:
+        raise FileNotFoundError(
+            "Dashboard demo dataset is missing; expected demo/dashboard_runs.json."
+        )
+    fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
+    if not isinstance(fixture, dict) or fixture.get("schema_version") != 1:
+        raise ValueError(f"Unsupported dashboard demo dataset: {fixture_path}")
+    daily_days_back = fixture.get("daily_days_back")
+    older_days_ago = fixture.get("older_days_ago")
+    outcomes = fixture.get("outcomes")
+    if (
+        isinstance(daily_days_back, bool)
+        or not isinstance(daily_days_back, int)
+        or daily_days_back < 0
+        or not isinstance(older_days_ago, list)
+        or not all(
+            isinstance(value, int) and not isinstance(value, bool) and value > daily_days_back
+            for value in older_days_ago
+        )
+        or not isinstance(outcomes, list)
+    ):
+        raise ValueError(f"Invalid dashboard demo dataset: {fixture_path}")
+    outcome_templates = {
+        item.get("outcome"): item
+        for item in outcomes
+        if isinstance(item, dict)
+    }
+    expected_outcomes = {"passed", "failed", "flaky", "error", "cancelled", "unknown"}
+    if set(outcome_templates) != expected_outcomes or len(outcome_templates) != len(outcomes):
+        raise ValueError(
+            "Dashboard demo dataset must define exactly one template for every run outcome."
+        )
+
+    now = datetime.now().astimezone()
+    days_ago_values = list(range(daily_days_back + 1)) + older_days_ago
+    records: list[RunRecord] = []
+    for days_ago in days_ago_values:
+        date_start = now.replace(hour=9, minute=0, second=0, microsecond=0) - timedelta(
+            days=days_ago
+        )
+        for outcome_index, outcome in enumerate(sorted(expected_outcomes)):
+            run_id = f"demo-{days_ago:03d}-{outcome}"
+            started = date_start + timedelta(minutes=outcome_index)
+            data = deepcopy(outcome_templates[outcome])
+            data.update(
+                {
+                    "schema_version": 1,
+                    "run_id": run_id,
+                    "started_at": started.isoformat(),
+                    "warnings": [],
+                    "evidence": [],
+                }
+            )
+            if outcome == "unknown":
+                data.pop("finished_at", None)
+            else:
+                data["finished_at"] = (
+                    started + timedelta(seconds=18 + outcome_index * 3)
+                ).isoformat()
+            records.append(
+                RunRecord(
+                    directory=fixture_path.parent / "dashboard-runs" / run_id,
+                    data=data,
+                )
+            )
+    return records
+
+
+def _get_started_content() -> str:
+    return (
+        '<section class="panel get-started" aria-labelledby="get-started-title">'
+        '<h2 id="get-started-title">Run your first test</h2>'
+        '<p class="get-started-intro">QualityPilot runs your end-to-end tests in an isolated '
+        'Docker Compose environment. Setup is local; no account or login is needed.</p>'
+        '<div class="setup-steps">'
+        '<article class="setup-step"><h3>1. Prepare your project</h3>'
+        '<p>Install Python 3.11+ and Docker with the Compose plugin, then start Docker. '
+        'Your app needs a Compose file with an application service and a test-runner service.</p>'
+        '<a href="https://github.com/Atul0607/quality-pilot/blob/main/README.md#requirements" '
+        'target="_blank" rel="noopener noreferrer">Review prerequisites</a></article>'
+        '<article class="setup-step"><h3>2. Create your local config</h3>'
+        '<p>In your application directory, create <code>quality-pilot.toml</code> from the '
+        '<a href="https://github.com/Atul0607/quality-pilot/blob/main/quality-pilot.example.toml" '
+        'target="_blank" rel="noopener noreferrer">example config</a>. Set '
+        '<code>compose_file</code>, <code>app_services</code>, <code>test_service</code>, '
+        'and <code>test_command</code> for your project.</p></article>'
+        '<article class="setup-step"><h3>3. Check your setup</h3>'
+        '<p>Run this from the directory containing your config. It validates the config and '
+        'Docker Compose project before starting tests.</p>'
+        '<pre><code>quality-pilot check --config quality-pilot.toml</code></pre></article>'
+        '<article class="setup-step"><h3>4. Run and review</h3>'
+        '<p>After the tests finish, start the dashboard with the project run directory '
+        '(stop any existing dashboard first). Results, reports, and evidence stay local.</p>'
+        '<pre><code>quality-pilot run --config quality-pilot.toml\n'
+        'quality-pilot dashboard --artifacts-dir .quality-pilot/runs</code></pre></article>'
+        '</div></section>'
+    )
+
+
+def render_get_started() -> str:
+    body = (
+        '<div class="page-head"><div><h1>Get started</h1>'
+        '<p class="muted">Connect QualityPilot to your application and run your first test.</p>'
+        '</div></div>'
+        '<p class="demo-notice"><strong>Local-first setup.</strong> No account or login is '
+        'needed. Your run results and evidence stay on this machine.</p>'
+        f"{_get_started_content()}"
+        '<p><a href="/?demo=1">← Back to demo dashboard</a></p>'
+    )
+    return _page("Get started", body, get_started_page=True)
+
+
+def _load_dashboard_runs(
+    root: Path,
+    force_demo: bool = False,
+) -> tuple[list[RunRecord], list[str], bool]:
+    records, warnings = load_runs(root)
+    demo_mode = force_demo or (not records and not warnings)
+    if demo_mode:
+        records = _demo_records()
+    return records, warnings, demo_mode
 
 
 def render_index(
@@ -641,7 +821,26 @@ def render_index(
     end_date: str = "",
     runs_page: bool = False,
     page: int = 1,
+    demo_mode: bool = False,
 ) -> str:
+    def dashboard_url(
+        status: str,
+        selected_period: str,
+        selected_start_date: str,
+        selected_end_date: str,
+        selected_runs_page: bool,
+        selected_page: int = 1,
+    ) -> str:
+        return _dashboard_url(
+            status,
+            selected_period,
+            selected_start_date,
+            selected_end_date,
+            selected_runs_page,
+            selected_page,
+            demo_mode,
+        )
+
     status_options = (
         "all", "passed", "failed", "flaky", "flaky_tests",
         "timed_runs", "error", "cancelled", "unknown",
@@ -684,13 +883,13 @@ def render_index(
         minutes, seconds = divmod(int(median_seconds), 60)
         median_duration = f"{minutes}m {seconds}s"
     cards = (
-        f'<a class="stat stat-link has-tooltip" data-tooltip="Percentage of recorded runs that passed in this date range" title="Percentage of recorded runs that passed in this date range" href="{_dashboard_url("passed", period, start_date, end_date, True)}"><span>Pass rate</span>'
+        f'<a class="stat stat-link has-tooltip" data-tooltip="Percentage of recorded runs that passed in this date range" title="Percentage of recorded runs that passed in this date range" href="{dashboard_url("passed", period, start_date, end_date, True)}"><span>Pass rate</span>'
         f'<strong>{pass_rate}</strong><small>of recorded runs passed</small></a>'
-        f'<a class="stat stat-link has-tooltip" data-tooltip="Total recorded runs in this date range" title="Total recorded runs in this date range" href="{_dashboard_url("all", period, start_date, end_date, True)}"><span>Test runs</span>'
+        f'<a class="stat stat-link has-tooltip" data-tooltip="Total recorded runs in this date range" title="Total recorded runs in this date range" href="{dashboard_url("all", period, start_date, end_date, True)}"><span>Test runs</span>'
         f'<strong>{len(date_records)}</strong><small>run records in {_escape(_DATE_RANGES[period].lower())}</small></a>'
-        f'<a class="stat stat-link has-tooltip" data-tooltip="Unique tests that had inconsistent results in this date range" title="Unique tests that had inconsistent results in this date range" href="{_dashboard_url("flaky_tests", period, start_date, end_date, True)}"><span>Flaky tests</span>'
+        f'<a class="stat stat-link has-tooltip" data-tooltip="Unique tests that had inconsistent results in this date range" title="Unique tests that had inconsistent results in this date range" href="{dashboard_url("flaky_tests", period, start_date, end_date, True)}"><span>Flaky tests</span>'
         f'<strong>{len(flaky_tests)}</strong><small>unique tests marked flaky</small></a>'
-        f'<a class="stat stat-link has-tooltip" data-tooltip="Median duration of runs with timing data in this date range" title="Median duration of runs with timing data in this date range" href="{_dashboard_url("timed_runs", period, start_date, end_date, True)}"><span>Median duration</span>'
+        f'<a class="stat stat-link has-tooltip" data-tooltip="Median duration of runs with timing data in this date range" title="Median duration of runs with timing data in this date range" href="{dashboard_url("timed_runs", period, start_date, end_date, True)}"><span>Median duration</span>'
         f'<strong>{median_duration}</strong><small>across runs with timing data</small></a>'
     )
     if status_filter == "all":
@@ -715,9 +914,7 @@ def render_index(
     page_start = (page - 1) * page_size
     page_records = filtered_records[page_start : page_start + page_size]
     return_to = html.unescape(
-        _dashboard_url(
-            status_filter, period, start_date, end_date, runs_page, page
-        )
+        dashboard_url(status_filter, period, start_date, end_date, runs_page, page)
     )
     if filtered_records:
         rows = []
@@ -727,7 +924,7 @@ def render_index(
             short_id = _escape(record.run_id[:12])
             link = (
                 f'<a class="run-link" title="{_escape(record.run_id)}" '
-                f'href="{_run_detail_url(record.run_id, return_to)}">{short_id}</a>'
+                f'href="{_run_detail_url(record.run_id, return_to, demo_mode)}">{short_id}</a>'
                 f'<span class="run-id-short">{_escape(record.run_id[12:])}</span>'
             )
             test_summary = (
@@ -762,7 +959,7 @@ def render_index(
             table += "<p>Run `quality-pilot run` to create the first record.</p>"
         else:
             table += (
-                f'<p><a href="{_dashboard_url("all", period, start_date, end_date, runs_page)}">'
+                f'<p><a href="{dashboard_url("all", period, start_date, end_date, runs_page)}">'
                 "Clear the filter</a></p>"
             )
         table += "</section>"
@@ -775,7 +972,7 @@ def render_index(
     quick_filters = "".join(
         f'<a class="stat stat-link quick-filter {outcome}'
         f'{" active" if status_filter == outcome else ""}" '
-        f'href="{_dashboard_url(filter_status, period, start_date, end_date, True)}">'
+        f'href="{dashboard_url(filter_status, period, start_date, end_date, True)}">'
         f'<span>{label}</span><strong>{count}</strong></a>'
         for outcome, filter_status, label, count in (
             ("passed", "passed", "Passed runs", totals["passed"]),
@@ -784,21 +981,30 @@ def render_index(
     )
     run_summary = (
         '<section class="run-summary" aria-label="Run results summary">'
-        '<div class="stat run-summary-card has-tooltip" data-tooltip="Total number of runs in the selected date range" title="Total number of runs in the selected date range">'
+        '<div class="stat run-summary-card has-tooltip" data-tooltip="Total number of runs matching the selected filters" title="Total number of runs matching the selected filters">'
         '<span>All runs</span>'
-        f"<strong>{len(date_records)}</strong></div>"
-        '<div class="stat run-summary-card passed has-tooltip" data-tooltip="Runs that passed in the selected date range" title="Runs that passed in the selected date range">'
+        f"<strong>{len(filtered_records)}</strong></div>"
+        '<div class="stat run-summary-card passed has-tooltip" data-tooltip="Runs that passed and match the selected filters" title="Runs that passed and match the selected filters">'
         '<span>Passed runs</span>'
-        f'<strong>{totals["passed"]}</strong></div>'
-        '<div class="stat run-summary-card failed has-tooltip" data-tooltip="Runs that failed in the selected date range" title="Runs that failed in the selected date range">'
+        f'<strong>{sum(record.outcome == "passed" for record in filtered_records)}</strong></div>'
+        '<div class="stat run-summary-card failed has-tooltip" data-tooltip="Runs that failed and match the selected filters" title="Runs that failed and match the selected filters">'
         '<span>Failed runs</span>'
-        f'<strong>{totals["failed"]}</strong></div></section>'
+        f'<strong>{sum(record.outcome == "failed" for record in filtered_records)}</strong></div></section>'
     )
     warning_html = "".join(
         f'<p class="warning">{_escape(warning)}</p>' for warning in warnings
     )
     if date_error:
         warning_html += f'<p class="warning">{_escape(date_error)}</p>'
+    demo_notice = (
+        ""
+        if demo_mode
+        else (
+            '<p class="demo-notice"><strong>Real project data.</strong> '
+            'Explore the complete sample dataset without changing your saved runs. '
+            '<a href="/?demo=1">Open demo dashboard</a>.</p>'
+        )
+    )
     date_options = "".join(
         f'<option value="{value}"{" selected" if period == value else ""}>'
         f"{label}</option>"
@@ -827,14 +1033,17 @@ def render_index(
                 f'<select id="status" name="status">{options}</select>'
             )
         date_filter = (
-            '<form class="filter date-filter" action="/runs" method="get">'
+            f'<form class="filter date-filter" '
+            f'action="/runs{"?demo=1" if demo_mode else ""}" method="get">'
             f"{date_controls}"
             f"{status_control}"
             '<button type="submit">Apply</button></form>'
         )
     else:
         date_filter = (
-            '<form class="filter date-filter" action="/" method="get" data-auto-apply="true">'
+            f'<form class="filter date-filter" '
+            f'action="/{"?demo=1" if demo_mode else ""}" '
+            'method="get" data-auto-apply="true">'
             '<input type="hidden" name="status" value="'
             f'{_escape(status_filter)}">'
             f"{date_controls}"
@@ -848,7 +1057,7 @@ def render_index(
         else "Per-run test pass rate"
     )
     latest = _latest_run_panel(
-        filtered_records[0] if filtered_records else None, return_to
+        filtered_records[0] if filtered_records else None, return_to, demo_mode
     )
     if runs_page:
         toolbar = run_summary
@@ -871,14 +1080,14 @@ def render_index(
     if page_count > 1:
         previous = (
             f'<a class="page-arrow" aria-label="Previous page" title="Previous page" '
-            f'href="{_dashboard_url(status_filter, period, start_date, end_date, runs_page, page - 1)}">'
+            f'href="{dashboard_url(status_filter, period, start_date, end_date, runs_page, page - 1)}">'
             '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15 4l-6 6 6 6M9 10H3"/></svg></a>'
             if page > 1
             else ""
         )
         next_page = (
             f'<a class="page-arrow" aria-label="Next page" title="Next page" '
-            f'href="{_dashboard_url(status_filter, period, start_date, end_date, runs_page, page + 1)}">'
+            f'href="{dashboard_url(status_filter, period, start_date, end_date, runs_page, page + 1)}">'
             '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 4l6 6-6 6m6-6h6"/></svg></a>'
             if page < page_count
             else ""
@@ -891,20 +1100,27 @@ def render_index(
         body = (
             '<div class="page-head"><div><h1>Test runs</h1>'
             '<p class="muted">Run results and failed test cases.</p></div></div>'
-            f'{date_filter}'
+            f'{demo_notice}{date_filter}'
             f"{warning_html}{toolbar}{run_table}{pagination}"
         )
     else:
+        overview_content = (
+            (
+                f'<div class="stats">{cards}</div>'
+                '<div class="overview-grid"><section class="panel">'
+                '<div class="panel-title"><h2>Test reliability</h2></div>'
+                f'<p class="panel-subtitle">{_escape(chart_caption)}</p>{chart}</section>'
+                f"{latest}</div>"
+            )
+            if records
+            else '<section class="panel"><h2>No run data yet</h2>'
+            '<p class="muted">Use Get started to connect your project and record a real run.</p>'
+            '<a href="/get-started">Open setup guide →</a></section>'
+        )
         body = (
             '<div class="page-head"><div><h1>Run health</h1>'
             '<p class="muted">Reliability trends from your recorded test runs.</p></div></div>'
-            f'{date_filter}'
-            f'<div class="stats">{cards}</div>'
-            f"{warning_html}"
-            '<div class="overview-grid"><section class="panel">'
-            '<div class="panel-title"><h2>Test reliability</h2></div>'
-            f'<p class="panel-subtitle">{_escape(chart_caption)}</p>{chart}</section>'
-            f"{latest}</div>"
+            f'{demo_notice}{date_filter}{warning_html}{overview_content}'
         )
     title = "Test runs" if runs_page else "Run health"
     return _page(
@@ -915,6 +1131,8 @@ def render_index(
         period,
         start_date,
         end_date,
+        get_started_page=False,
+        demo_mode=demo_mode,
     )
 
 
@@ -932,7 +1150,11 @@ def _evidence_path(run: RunRecord, relative_path: str) -> Path | None:
     return resolved if resolved.is_file() else None
 
 
-def render_detail(record: RunRecord, return_to: str = "/runs") -> str:
+def render_detail(
+    record: RunRecord,
+    return_to: str = "/runs",
+    demo_mode: bool = False,
+) -> str:
     data = record.data
     attempts = data.get("attempts", [])
     if not isinstance(attempts, list):
@@ -1026,17 +1248,23 @@ def render_detail(record: RunRecord, return_to: str = "/runs") -> str:
     return_to = _escape(return_to)
     body = (
         f'<p><a href="{return_to}">← Back to runs</a></p>'
-        f"<h1>Run {_escape(record.run_id)}</h1>"
-        f'<p><span class="badge {_escape(outcome)}">{_escape(outcome)}</span> '
-        f'<span class="muted">Started {_escape(_time(data.get("started_at")))}'
-        f" · Duration {_escape(_duration(data))}</span></p>"
-        '<section class="panel"><h2>Attempts</h2>'
-        f"{attempt_table}</section>"
-        f"{warning_html}"
-        f"<h2>Test results ({len(record.test_cases)})</h2>{test_table}"
-        f'<section class="panel"><h2>Evidence</h2>{evidence_list}</section>'
+        + (
+            '<p class="demo-notice"><strong>Demo data.</strong> This is an '
+            'illustrative sample run, not a recorded test.</p>'
+            if demo_mode
+            else ""
+        )
+        + f"<h1>Run {_escape(record.run_id)}</h1>"
+        + f'<p><span class="badge {_escape(outcome)}">{_escape(outcome)}</span> '
+        + f'<span class="muted">Started {_escape(_time(data.get("started_at")))}'
+        + f" · Duration {_escape(_duration(data))}</span></p>"
+        + '<section class="panel"><h2>Attempts</h2>'
+        + f"{attempt_table}</section>"
+        + f"{warning_html}"
+        + f"<h2>Test results ({len(record.test_cases)})</h2>{test_table}"
+        + f'<section class="panel"><h2>Evidence</h2>{evidence_list}</section>'
     )
-    return _page(f"Run {record.run_id}", body)
+    return _page(f"Run {record.run_id}", body, demo_mode=demo_mode)
 
 
 def create_server(artifacts_dir: Path, host: str, port: int) -> ThreadingHTTPServer:
@@ -1058,13 +1286,23 @@ def create_server(artifacts_dir: Path, host: str, port: int) -> ThreadingHTTPSer
         def do_GET(self) -> None:
             parsed_url = urlsplit(self.path)
             path = unquote(parsed_url.path)
+            if path == "/get-started":
+                self._respond(
+                    200,
+                    render_get_started().encode("utf-8"),
+                    "text/html; charset=utf-8",
+                )
+                return
             if path in {"/", "/index.html", "/runs"}:
+                query = parse_qs(parsed_url.query)
+                requested_demo = query.get("demo", [""])[0] == "1"
                 try:
-                    records, warnings = load_runs(root)
-                except OSError as exc:
+                    records, warnings, demo_mode = _load_dashboard_runs(
+                        root, force_demo=requested_demo
+                    )
+                except (OSError, ValueError) as exc:
                     self._respond(500, _escape(exc).encode(), "text/plain; charset=utf-8")
                     return
-                query = parse_qs(parsed_url.query)
                 requested_status = query.get(
                     "result", query.get("status", ["all"])
                 )[0]
@@ -1092,6 +1330,7 @@ def create_server(artifacts_dir: Path, host: str, port: int) -> ThreadingHTTPSer
                         end_date,
                         path == "/runs",
                         page,
+                        demo_mode,
                     ).encode("utf-8"),
                     "text/html; charset=utf-8",
                 )
@@ -1099,9 +1338,13 @@ def create_server(artifacts_dir: Path, host: str, port: int) -> ThreadingHTTPSer
 
             parts = path.split("/")
             if len(parts) >= 3 and parts[1] == "runs":
+                query = parse_qs(parsed_url.query)
+                requested_demo = query.get("demo", [""])[0] == "1"
                 try:
-                    records, _ = load_runs(root)
-                except OSError as exc:
+                    records, _, demo_mode = _load_dashboard_runs(
+                        root, force_demo=requested_demo
+                    )
+                except (OSError, ValueError) as exc:
                     self._respond(500, _escape(exc).encode(), "text/plain; charset=utf-8")
                     return
                 record = next((item for item in records if item.run_id == parts[2]), None)
@@ -1109,12 +1352,10 @@ def create_server(artifacts_dir: Path, host: str, port: int) -> ThreadingHTTPSer
                     self.send_error(404)
                     return
                 if len(parts) == 3:
-                    return_to = parse_qs(parsed_url.query).get(
-                        "return_to", ["/runs"]
-                    )[0]
+                    return_to = query.get("return_to", ["/runs"])[0]
                     self._respond(
                         200,
-                        render_detail(record, return_to).encode("utf-8"),
+                        render_detail(record, return_to, demo_mode).encode("utf-8"),
                         "text/html; charset=utf-8",
                     )
                     return

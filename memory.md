@@ -2,13 +2,14 @@
 
 ## Current milestone
 
-Docker/CI and the local run-history dashboard are merged in [PR #1](https://github.com/Atul0607/quality-pilot/pull/1) and [PR #2](https://github.com/Atul0607/quality-pilot/pull/2). Dashboard UI improvements are in progress on `qualitypilot/dashboard-ui-improvements`: date-range filtering, a dedicated run list linked from the sidebar, and an accessible top-right theme control.
+Docker/CI and the local run-history dashboard are merged in [PR #1](https://github.com/Atul0607/quality-pilot/pull/1), [PR #2](https://github.com/Atul0607/quality-pilot/pull/2), and [PR #3](https://github.com/Atul0607/quality-pilot/pull/3). The onboarding UI is local-first with no login: an empty artifacts directory shows a clearly labeled, in-memory demo dashboard, and setup instructions live on a separate `/get-started` page. Demo runs cover every result filter and date preset; real run records automatically replace the demo.
 
 ## Next-step plan
 
-1. Verify sidebar navigation, date filtering, theme persistence, and failed-case summaries in the browser against actual run records.
-2. Run the full unit/lint checks and submit a UI-improvements PR.
-3. Gather feedback after merge; preserve the run.json schema contract, read-only evidence access, and defer hosted accounts/multi-user storage.
+1. Validate the complete `/get-started` journey from a clean environment, including prerequisites, project configuration, and the first real test run.
+2. Keep quickstart, example configuration, and CLI guidance consistent as onboarding friction is discovered.
+3. Ensure users can understand real run results, reports, and evidence, with clear recovery guidance for common setup failures.
+4. Preserve the run.json schema contract and read-only evidence access.
 
 ## Local verification already completed
 
