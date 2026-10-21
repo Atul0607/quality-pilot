@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "daily_days_back": 90,
+  "older_days_ago": [120],
+  "outcomes": [
+    {
+      "outcome": "passed",
+      "attempts": [
+        {"number": 1, "outcome": "passed", "test_exit_code": 0}
+      ],
+      "test_cases": [
+        {"test_id": "storefront::home_page", "outcome": "passed", "attempts": ["passed"], "duration_seconds": 1.42},
+        {"test_id": "storefront::product_search", "outcome": "passed", "attempts": ["passed"], "duration_seconds": 2.16},
+        {"test_id": "checkout::complete_purchase", "outcome": "passed", "attempts": ["passed"], "duration_seconds": 4.31},
+        {"test_id": "checkout::declined_payment", "outcome": "passed", "attempts": ["passed"], "duration_seconds": 3.2}
+      ]
+    },
+    {
+      "outcome": "failed",
+      "attempts": [
+        {"number": 1, "outcome": "failed", "test_exit_code": 1, "error": "One or more checkout assertions failed."}
+      ],
+      "test_cases": [
+        {"test_id": "storefront::home_page", "outcome": "passed", "attempts": ["passed"], "duration_seconds": 1.42},
+        {"test_id": "storefront::product_search", "outcome": "passed", "attempts": ["passed"], "duration_seconds": 2.16},
+        {"test_id": "checkout::declined_payment", "outcome": "failed", "attempts": ["failed"], "duration_seconds": 3.8, "failure": "Expected a declined payment message, but none was displayed."}
+      ]
+    },
+    {
+      "outcome": "flaky",
+      "attempts": [
+        {"number": 1, "outcome": "failed", "test_exit_code": 1, "error": "A test passed after retry."},
+        {"number": 2, "outcome": "passed", "test_exit_code": 0}
+      ],
+      "test_cases": [
+        {"test_id": "storefront::home_page", "outcome": "passed", "attempts": ["passed"], "duration_seconds": 1.42},
+        {"test_id": "checkout::complete_purchase", "outcome": "flaky", "attempts": ["failed", "passed"], "duration_seconds": 4.6, "message": "Passed on retry after a transient response timeout."}
+      ]
+    },
+    {
+      "outcome": "error",
+      "attempts": [
+        {"number": 1, "outcome": "error", "test_exit_code": null, "error": "The test runner exited before reporting results."}
+      ],
+      "test_cases": [
+        {"test_id": "checkout::complete_purchase", "outcome": "error", "attempts": [], "message": "The test runner stopped before this test completed."}
+      ]
+    },
+    {
+      "outcome": "cancelled",
+      "attempts": [
+        {"number": 1, "outcome": "cancelled", "test_exit_code": null, "error": "The run was cancelled before the suite completed."}
+      ],
+      "test_cases": [
+        {"test_id": "checkout::complete_purchase", "outcome": "cancelled", "attempts": [], "message": "The test was not completed."}
+      ]
+    },
+    {
+      "outcome": "unknown",
+      "attempts": [
+        {"number": 1, "outcome": "unknown", "test_exit_code": null, "error": "No final outcome was recorded."}
+      ],
+      "test_cases": []
+    }
+  ]
+}

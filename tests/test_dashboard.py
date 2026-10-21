@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import date, timedelta
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -10,7 +11,13 @@ from urllib.error import HTTPError
 from urllib.parse import quote
 from urllib.request import urlopen
 
-from quality_pilot.dashboard import create_server, load_runs, render_detail, render_index
+from quality_pilot.dashboard import (
+    create_server,
+    load_runs,
+    render_detail,
+    render_get_started,
+    render_index,
+)
 
 
 def _write_run(
@@ -44,6 +51,51 @@ def _write_run(
 
 
 class DashboardTests(unittest.TestCase):
+    def test_get_started_page_contains_local_first_run_steps(self) -> None:
+        page = render_get_started()
+
+        self.assertIn("<h1>Get started</h1>", page)
+        self.assertIn('href="/get-started" title="Set up QualityPilot', page)
+        self.assertIn('<section class="panel get-started"', page)
+        self.assertIn("no account or login is needed", page)
+        for step in (
+            "Prepare your project",
+            "Create your local config",
+            "Check your setup",
+            "Run and review",
+        ):
+            self.assertIn(step, page)
+        self.assertIn("quality-pilot.example.toml", page)
+        self.assertIn("quality-pilot check --config quality-pilot.toml", page)
+        self.assertIn("quality-pilot run --config quality-pilot.toml", page)
+        self.assertIn(
+            "quality-pilot dashboard --artifacts-dir .quality-pilot/runs",
+            page,
+        )
+        self.assertNotIn("Demo data.", page)
+
+    def test_empty_overview_directly_links_to_get_started(self) -> None:
+        page = render_index([], [], period="all")
+
+        self.assertIn("No run data yet", page)
+        self.assertIn('href="/get-started">Open setup guide', page)
+        self.assertNotIn("Run your first test", page)
+
+        with TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            _write_run(root, "run-with-history", "passed")
+            records, warnings = load_runs(root)
+            page_with_history = render_index(
+                records, warnings, period="all"
+            )
+        self.assertNotIn("Get started</h1>", page_with_history)
+
+        page_with_record_warnings = render_index(
+            [], ["broken-run: unable to load run record."], period="all"
+        )
+        self.assertNotIn("Get started</h1>", page_with_record_warnings)
+        self.assertIn("broken-run: unable to load run record.", page_with_record_warnings)
+
     def test_index_shows_actual_run_outcomes_and_surfaces_bad_records(self) -> None:
         with TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
@@ -180,9 +232,10 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('aria-current="page"', page)
             self.assertIn('href="/runs?status=all&amp;period=all"', page)
             sidebar_nav = page.split('<nav class="side-nav"', 1)[1].split("</nav>", 1)[0]
-            self.assertEqual(sidebar_nav.count("<a "), 2)
+            self.assertEqual(sidebar_nav.count("<a "), 3)
             self.assertIn(">Overview</span>", sidebar_nav)
             self.assertIn(">Test runs</span>", sidebar_nav)
+            self.assertIn(">Get started</span>", sidebar_nav)
             self.assertNotIn("Flaky tests", sidebar_nav)
             self.assertIn("<span class=\"nav-count\">3</span>", page)
             self.assertNotIn("<section class=\"panel attention\">", page)
@@ -202,15 +255,15 @@ class DashboardTests(unittest.TestCase):
             self.assertIn("<span>Passed runs</span><strong>1</strong>", run_summary)
             self.assertIn("<span>Failed runs</span><strong>1</strong>", run_summary)
             self.assertIn(
-                'title="Total number of runs in the selected date range"',
+                'title="Total number of runs matching the selected filters"',
                 run_summary,
             )
             self.assertIn(
-                'title="Runs that passed in the selected date range"',
+                'title="Runs that passed and match the selected filters"',
                 run_summary,
             )
             self.assertIn(
-                'title="Runs that failed in the selected date range"',
+                'title="Runs that failed and match the selected filters"',
                 run_summary,
             )
             self.assertEqual(run_summary.count('data-tooltip="'), 3)
@@ -593,6 +646,12 @@ class DashboardTests(unittest.TestCase):
                     self.assertIn("run-failed", failed_index)
                     self.assertNotIn("run-passed", failed_index)
                     self.assertNotIn("payment declined", failed_index)
+                    failed_summary = failed_index.split(
+                        '<section class="run-summary"', 1
+                    )[1].split("</section>", 1)[0]
+                    self.assertIn("<span>All runs</span><strong>1</strong>", failed_summary)
+                    self.assertIn("<span>Passed runs</span><strong>0</strong>", failed_summary)
+                    self.assertIn("<span>Failed runs</span><strong>1</strong>", failed_summary)
                     self.assertIn(
                         "return_to=%2Fruns%3Fstatus%3Dfailed%26period%3Dall", failed_index
                     )
@@ -666,6 +725,158 @@ class DashboardTests(unittest.TestCase):
                 with urlopen(f"{base_url}/runs/run-passed/evidence/report.md") as response:
                     self.assertEqual(response.status, 200)
                     self.assertEqual(response.read().decode(), "# saved report\n")
+            finally:
+                server.shutdown()
+                thread.join(timeout=5)
+                server.server_close()
+
+    def test_empty_dashboard_has_labeled_demo_covering_filters_without_writes(self) -> None:
+        with TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            server = create_server(root, "127.0.0.1", 0)
+            thread = Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            base_url = f"http://127.0.0.1:{server.server_port}"
+
+            def fetch(path: str) -> str:
+                with urlopen(f"{base_url}{path}") as response:
+                    self.assertEqual(response.status, 200)
+                    return response.read().decode()
+
+            def assert_summary_matches_grid(
+                page: str,
+                expected: tuple[int, int, int],
+            ) -> None:
+                summary = page.split(
+                    '<section class="run-summary"', 1
+                )[1].split("</section>", 1)[0]
+                counts = tuple(
+                    int(value) for value in re.findall(r"<strong>(\d+)</strong>", summary)
+                )
+                showing = re.search(r"Showing (?:\d+-\d+|0) of (\d+) runs", page)
+                self.assertEqual(counts, expected)
+                self.assertIsNotNone(showing)
+                assert showing is not None
+                self.assertEqual(counts[0], int(showing.group(1)))
+
+            try:
+                overview = fetch("/?period=all")
+                self.assertNotIn("Demo data.", overview)
+                self.assertNotIn('class="demo-notice"', overview)
+                self.assertIn("Test reliability", overview)
+
+                get_started = fetch("/get-started")
+                self.assertIn("<h1>Get started</h1>", get_started)
+                self.assertNotIn("Demo data.", get_started)
+
+                periods = {
+                    "today": 1,
+                    "yesterday": 1,
+                    "last_7_days": 7,
+                    "last_14_days": 14,
+                    "last_30_days": 30,
+                    "last_90_days": 90,
+                    "all": 92,
+                }
+                result_filters = {
+                    "all": lambda count: (count * 6, count, count),
+                    "passed": lambda count: (count, count, 0),
+                    "failed": lambda count: (count, 0, count),
+                    "flaky": lambda count: (count, 0, 0),
+                    "error": lambda count: (count, 0, 0),
+                    "cancelled": lambda count: (count, 0, 0),
+                    "unknown": lambda count: (count, 0, 0),
+                    "flaky_tests": lambda count: (count, 0, 0),
+                    "timed_runs": lambda count: (count * 5, count, count),
+                }
+                for period, bucket_count in periods.items():
+                    for result, summary_for in result_filters.items():
+                        with self.subTest(period=period, result=result):
+                            page = fetch(
+                                f"/runs?demo=1&status={result}&period={period}"
+                            )
+                            self.assertNotIn("Demo data.", page)
+                            self.assertNotIn('class="demo-notice"', page)
+                            assert_summary_matches_grid(
+                                page, summary_for(bucket_count)
+                            )
+                            self.assertLessEqual(
+                                len(re.findall(r"<tr>", page)) - 1,
+                                10,
+                            )
+
+                custom_start = date.today() - timedelta(days=4)
+                custom_end = date.today() - timedelta(days=2)
+                custom_range = fetch(
+                    f"/runs?demo=1&period=custom&start_date={custom_start}&end_date={custom_end}"
+                )
+                custom_range_second_page = fetch(
+                    f"/runs?demo=1&period=custom&start_date={custom_start}"
+                    f"&end_date={custom_end}&page=2"
+                )
+                self.assertIn("demo-002-passed", custom_range)
+                self.assertIn("demo-003-passed", custom_range_second_page)
+                self.assertIn("demo-004-unknown", custom_range_second_page)
+                assert_summary_matches_grid(custom_range, (18, 3, 3))
+
+                all_runs_second_page = fetch("/runs?demo=1&period=all&page=2")
+                self.assertIn("demo-002-passed", all_runs_second_page)
+                demo_detail = fetch("/runs/demo-003-flaky?demo=1")
+                self.assertIn("illustrative sample run, not a recorded test", demo_detail)
+                self.assertIn("checkout::complete_purchase", demo_detail)
+                self.assertEqual(list(root.iterdir()), [])
+            finally:
+                server.shutdown()
+                thread.join(timeout=5)
+                server.server_close()
+
+    def test_demo_mode_is_available_alongside_real_runs(self) -> None:
+        with TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            _write_run(root, "real-run-001", "passed")
+            server = create_server(root, "127.0.0.1", 0)
+            thread = Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            base_url = f"http://127.0.0.1:{server.server_port}"
+            try:
+                with urlopen(f"{base_url}/runs?period=all") as response:
+                    real_runs = response.read().decode()
+                    self.assertIn("real-run-001", real_runs)
+                    self.assertNotIn("demo-000-passed", real_runs)
+                    self.assertIn('href="/?demo=1">Open demo dashboard', real_runs)
+
+                with urlopen(f"{base_url}/runs?demo=1&period=all&page=2") as response:
+                    demo_runs = response.read().decode()
+                    self.assertNotIn("Demo data.", demo_runs)
+                    self.assertNotIn('class="demo-notice"', demo_runs)
+                    self.assertIn("demo-002-passed", demo_runs)
+                    self.assertNotIn("real-run-001", demo_runs)
+                    self.assertIn('action="/runs?demo=1"', demo_runs)
+
+                with urlopen(
+                    f"{base_url}/runs?demo=1&status=failed&period=all"
+                ) as response:
+                    failed_demo_runs = response.read().decode()
+                    self.assertIn("demo-000-failed", failed_demo_runs)
+                    self.assertNotIn("real-run-001", failed_demo_runs)
+                    failed_demo_summary = failed_demo_runs.split(
+                        '<section class="run-summary"', 1
+                    )[1].split("</section>", 1)[0]
+                    self.assertIn("<span>All runs</span><strong>92</strong>", failed_demo_summary)
+                    self.assertIn("<span>Passed runs</span><strong>0</strong>", failed_demo_summary)
+                    self.assertIn("<span>Failed runs</span><strong>92</strong>", failed_demo_summary)
+
+                with urlopen(
+                    f"{base_url}/runs/demo-000-failed?"
+                    "return_to=%2Fruns%3Fstatus%3Dfailed%26period%3Dall%26demo%3D1"
+                    "&demo=1"
+                ) as response:
+                    demo_detail = response.read().decode()
+                    self.assertIn("illustrative sample run, not a recorded test", demo_detail)
+                    self.assertIn('href="/runs?status=failed&amp;period=all&amp;demo=1"', demo_detail)
+
+                records, _ = load_runs(root)
+                self.assertEqual([record.run_id for record in records], ["real-run-001"])
             finally:
                 server.shutdown()
                 thread.join(timeout=5)

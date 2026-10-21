@@ -25,6 +25,9 @@ quality-pilot = "quality_pilot.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.data-files]
+"share/quality-pilot" = ["demo/dashboard_runs.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests", "demo/tests"]
 markers = [

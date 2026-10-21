@@ -6,6 +6,18 @@ Quality Pilot is an early local CLI MVP. It starts application services with Doc
 
 The repository includes a self-contained demo storefront, PostgreSQL service, and real browser/API tests. See [demo/README.md](demo/README.md) for the Compose workflow and test details.
 
+## Dashboard demo and onboarding
+
+The local dashboard requires no account or login. Its demo dataset is defined in [`demo/dashboard_runs.json`](demo/dashboard_runs.json): six outcomes are represented for every day in the last 90 days, plus older sample runs. This gives each result filter records across all preset date ranges, and custom ranges within that 90-day window have matching samples. The dashboard loads those records in memory; they are never saved to a project's artifacts. When real run history exists, use **Open demo dashboard** on the real-project view to explore the demo separately. Use **Get started** in the sidebar for prerequisites, a link to the [example config](quality-pilot.example.toml), and the steps to connect your own project. Create `quality-pilot.toml` in your application directory, set its Compose file, app services, test service, and test command, then run:
+
+```sh
+quality-pilot check --config quality-pilot.toml
+quality-pilot run --config quality-pilot.toml
+quality-pilot dashboard --artifacts-dir .quality-pilot/runs
+```
+
+Once a valid run is recorded, the dashboard automatically shows your real results by default; you can still open the separate demo view at any time. To see results from a project-specific config, stop any existing dashboard and start it from that project directory, or pass `--artifacts-dir` pointing to the config's `artifacts_dir`.
+
 ## Requirements
 
 - Python 3.11 or newer
